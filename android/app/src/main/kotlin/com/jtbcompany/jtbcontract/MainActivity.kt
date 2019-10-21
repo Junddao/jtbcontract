@@ -1,4 +1,4 @@
-package com.example.jtbcontract
+package com.jtbcompany.jtbcontract
 
 import android.os.Bundle
 

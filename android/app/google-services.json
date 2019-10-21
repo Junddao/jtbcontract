@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "717348290129",
+    "firebase_url": "https://jtbcontract.firebaseio.com",
+    "project_id": "jtbcontract",
+    "storage_bucket": "jtbcontract.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:717348290129:android:8592fe8b170fc05c3ac270",
+        "android_client_info": {
+          "package_name": "com.jtbcompany.jtbcontract"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "717348290129-4ddaoutjfkcuri5mkl4qhrenvro95hl8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jtbcompany.jtbcontract",
+            "certificate_hash": "a55be44f9fe4c89f5fcf314a1887bc8ab3e037fe"
+          }
+        },
+        {
+          "client_id": "717348290129-bv0hvbg7lu08p9jau0jsda0a3kgf87cn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDRca2dAndzgBB5HTLQQT0wqbfhPch5XUQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "717348290129-bv0hvbg7lu08p9jau0jsda0a3kgf87cn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
