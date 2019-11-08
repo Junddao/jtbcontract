@@ -74,7 +74,7 @@ class _LoginPageState extends State<LoginPage> {
                   colorBlendMode: BlendMode.modulate),
             ),
             Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: <Widget>[
                 SizedBox(height: 10.0),
                 Container(
