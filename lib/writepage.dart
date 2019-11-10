@@ -29,18 +29,26 @@ class _WritePageState extends State<WritePage> {
   bool _isMicPushed = false;
 
   bool hasFile = false;
+  int fileNum = 0;
+  io.Directory appDocDirectory;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: ListView.builder(
-        
+        itemCount: fileNum, 
+        itemBuilder: (BuildContext context, int index) {
+          return Container(
+            height: 50,
+            child: Center(child: Text('aaa')),
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           _isMicPushed ? voiceRecordStop() : voiceRecordStart();
           setState(() {
-            
+            _search();
           });
         },
         label: Text('Record'),
@@ -48,14 +56,14 @@ class _WritePageState extends State<WritePage> {
         foregroundColor: Colors.black,
         backgroundColor: _isMicPushed ? Colors.pink : Colors.white,
       ),
-    
     );
   }
+  
 
   voiceRecordStart() {
       _isRecording ? null : _start();
       _isMicPushed = true;
-   
+    
   }
 
   voiceRecordStop(){
@@ -68,8 +76,8 @@ class _WritePageState extends State<WritePage> {
   _start() async {
     try {
       if (await AudioRecorder.hasPermissions) {
-     
-        io.Directory appDocDirectory =
+        
+        appDocDirectory =
             await getApplicationDocumentsDirectory();
         var now = DateTime.now();
         String formattedDate = DateFormat('yyyyMMddhhmmss').format(now);
@@ -109,11 +117,13 @@ class _WritePageState extends State<WritePage> {
   }
 
   _search() async{
-    print("Search recording file : " + audioPath);
-    File file = widget.localFileSystem.file(audioPath);
-    if(file.exists() != null) {
-        hasFile = true;
-    }
-    else hasFile = false;
-  }
+    print("Search recording file : " + appDocDirectory.path);
+    
+    List<String> liFileName;
+
+    appDocDirectory.list(recursive: true, followLinks: false)
+    .listen((FileSystemEntity entity){
+       print(entity.path);
+    });
+  } 
 }
