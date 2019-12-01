@@ -22,7 +22,7 @@ class WritePage extends StatefulWidget {
 
 class _WritePageState extends State<WritePage> {
 
- Recording _recording = new Recording();
+  Recording _recording = new Recording();
   bool _isRecording = false;
   Random random = new Random();
   TextEditingController _controller = new TextEditingController();
@@ -32,17 +32,20 @@ class _WritePageState extends State<WritePage> {
   int fileNum = 0;
   io.Directory appDocDirectory;
 
+  List liFileName = new List();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: ListView.builder(
-        itemCount: fileNum, 
+        itemCount: liFileName.length, 
         itemBuilder: (BuildContext context, int index) {
           return Container(
             height: 50,
-            child: Center(child: Text('aaa')),
+            child: Center(child: Text(liFileName[index].toString())),
           );
         },
+
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
@@ -119,11 +122,8 @@ class _WritePageState extends State<WritePage> {
   _search() async{
     print("Search recording file : " + appDocDirectory.path);
     
-    List<String> liFileName;
+    String directory = appDocDirectory.path;
 
-    appDocDirectory.list(recursive: true, followLinks: false)
-    .listen((FileSystemEntity entity){
-       print(entity.path);
-    });
+    liFileName = io.Directory("$directory/").listSync();
   } 
 }
