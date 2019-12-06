@@ -20,6 +20,8 @@ class WritePage extends StatefulWidget {
   _WritePageState createState() => _WritePageState();
 }
 
+
+
 class _WritePageState extends State<WritePage> {
 
   Recording _recording = new Recording();
@@ -36,30 +38,73 @@ class _WritePageState extends State<WritePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: ListView.builder(
-        itemCount: liFileName.length, 
-        itemBuilder: (BuildContext context, int index) {
-          return Container(
-            height: 50,
-            child: Center(child: Text(liFileName[index].toString())),
-          );
-        },
+    //return Scaffold(
+      return Container(
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            CircleAvatar(
+              radius: 42,
+              backgroundColor: _isMicPushed ? Colors.black : Colors.white,
+              child: CircleAvatar(
+                child: IconButton(
+                  icon: Icon(Icons.mic), 
+                  color: _isMicPushed ? Colors.black : Colors.white,
+                  iconSize: 32,
+                  alignment: Alignment.center,
+                  onPressed: () {
+                    _isMicPushed ? voiceRecordStop() : voiceRecordStart();
+                    setState(() {
+                      _search();
+                    });
+                    
+                  },
+            
+                ),
+                radius: 40,
+                backgroundColor: _isMicPushed ? Colors.white : Colors.pink,
+                
+              ),
+            ),
+            
+            
+            Text('Record'),
+            
+          ],
+        )
 
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          _isMicPushed ? voiceRecordStop() : voiceRecordStart();
-          setState(() {
-            _search();
-          });
-        },
-        label: Text('Record'),
-        icon: Icon(Icons.mic),
-        foregroundColor: Colors.black,
-        backgroundColor: _isMicPushed ? Colors.pink : Colors.white,
-      ),
-    );
+        
+
+    //     icon: Icon(Icons.mic),
+    //     foregroundColor: Colors.black,
+    //     backgroundColor: _isMicPushed ? Colors.pink : Colors.white,
+          
+        
+        
+           
+            //child: Center(child: Text(liFileName[index].toString())),
+      );
+      // body: ListView.builder(
+      //   itemCount: liFileName.length, 
+      //   itemBuilder: (BuildContext context, int index) {
+          
+      //   },
+    
+    
+    //   floatingActionButton: FloatingActionButton.extended(
+    //     onPressed: () {
+    //       _isMicPushed ? voiceRecordStop() : voiceRecordStart();
+    //       setState(() {
+    //         _search();
+    //       });
+    //     },
+    //     label: Text('Record'),
+    //     icon: Icon(Icons.mic),
+    //     foregroundColor: Colors.black,
+    //     backgroundColor: _isMicPushed ? Colors.pink : Colors.white,
+    //   ),
+    // );
   }
   
 
@@ -125,5 +170,6 @@ class _WritePageState extends State<WritePage> {
     String directory = appDocDirectory.path;
 
     liFileName = io.Directory("$directory/").listSync();
+
   } 
 }
