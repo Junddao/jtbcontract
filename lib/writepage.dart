@@ -5,7 +5,7 @@ import 'package:file/file.dart';
 import 'package:file/local.dart';
 import 'package:flutter/material.dart';
 import 'package:audio_recorder/audio_recorder.dart';
-import 'package:flutter/services.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:intl/intl.dart';
 
 import 'dart:io' as io;
@@ -40,7 +40,7 @@ class _WritePageState extends State<WritePage> {
 
   @override
   Widget build(BuildContext context) {
-    //return Scaffold(
+
     return Container(
       alignment: Alignment.center,
       child: Column(
@@ -113,7 +113,9 @@ class _WritePageState extends State<WritePage> {
                         Text("Send"),
                       ],
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      _uploadFile();
+                    },
                   ),
                 ),
               ],
@@ -261,8 +263,27 @@ class _WritePageState extends State<WritePage> {
         diRec.deleteSync(recursive: true);
         _hasRecFile = false;
       }
-  
     }
     catch(Exception) {}
+  }
+
+  Future _uploadFile() async{
+    // FirebaseStorage _storage = FirebaseStorage(storageBucket: 'gs://jtbcontract.appspot.com');
+    File file = widget.localFileSystem.file(audioPath);
+    
+    // 디렉토리 경로 어떻게 할지 생각해보자.
+    // 상대방 전화번호 or 카카오톡 id or google ID / 파일.m4a << 
+
+    StorageReference firebaseStorageRef = FirebaseStorage.instance.ref().child(file.basename);
+    StorageUploadTask uploadTask = firebaseStorageRef.putFile(
+      file, StorageMetadata(
+        contentType: 'audio/m4a',
+        customMetadata: <String, String>{'file':'audio'},
+      ),
+    );
+    //StorageTaskSnapshot taskSnapshot = await uploadTask.onComplete;
+    setState(() {
+      print("uploaded.");
+    });
   }
 }
