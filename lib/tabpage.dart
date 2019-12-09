@@ -63,8 +63,8 @@ class _TabPageState extends State<TabPage> {
                 currentIndex: value.selectedIndex,
                 items: <BottomNavigationBarItem>[
                   BottomNavigationBarItem(
-                      icon: Icon(Icons.edit),
-                      title: Text('쓰기')), // 뭘 보여줘야 할까...
+                      icon: Icon(Icons.mic),
+                      title: Text('녹음')), // 뭘 보여줘야 할까...
                   BottomNavigationBarItem(
                       icon: Icon(Icons.search),
                       title: Text('찾기')), // 계약서 작성 페이지

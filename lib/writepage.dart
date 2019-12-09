@@ -10,6 +10,9 @@ import 'package:intl/intl.dart';
 
 import 'dart:io' as io;
 import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
+
+import 'data/userinfo.dart';
 
 class WritePage extends StatefulWidget {
   final LocalFileSystem localFileSystem;
@@ -40,6 +43,29 @@ class _WritePageState extends State<WritePage> {
 
   @override
   Widget build(BuildContext context) {
+    TextEditingController customController = new TextEditingController();
+    createAlertDialog(BuildContext context) {
+      return showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text('select friend'),
+              content: TextField(
+                controller: customController,
+              ),
+              actions: <Widget>[
+                MaterialButton(
+                  elevation: 5.0,
+                  child: Text('Send'),
+                  onPressed: () {
+                    Navigator.of(context).pop(customController.text.toString());
+                    _uploadFile(customController);
+                  },
+                )
+              ],
+            );
+          });
+    }
 
     return Container(
       alignment: Alignment.center,
@@ -53,15 +79,21 @@ class _WritePageState extends State<WritePage> {
               backgroundColor: _isRecording ? Colors.white : Colors.black,
               child: CircleAvatar(
                 child: IconButton(
-                  icon: _hasRecFile ? (_isPlaying ? Icon(Icons.stop)  : Icon(Icons.play_arrow)) : Icon(Icons.mic),
+                  icon: _hasRecFile
+                      ? (_isPlaying ? Icon(Icons.stop) : Icon(Icons.play_arrow))
+                      : Icon(Icons.mic),
                   color: _isRecording ? Colors.white : Colors.black,
                   iconSize: 40,
                   alignment: Alignment.center,
                   onPressed: () {
-                    _hasRecFile ? (_isPlaying ? _stopPlayRec() : _playRec()) : (_isRecording ? voiceRecordStop() : voiceRecordStart());
+                    _hasRecFile
+                        ? (_isPlaying ? _stopPlayRec() : _playRec())
+                        : (_isRecording
+                            ? voiceRecordStop()
+                            : voiceRecordStart());
                     //_search();
                     // setState(() {
-                      
+
                     // });
                   },
                 ),
@@ -89,9 +121,9 @@ class _WritePageState extends State<WritePage> {
                       ],
                     ),
                     onPressed: () {
-                       setState(() {
-                          _deleteRec();
-                       });
+                      setState(() {
+                        _deleteRec();
+                      });
                     },
                   ),
                 ),
@@ -114,7 +146,21 @@ class _WritePageState extends State<WritePage> {
                       ],
                     ),
                     onPressed: () {
-                      _uploadFile();
+                      if (_hasRecFile) {
+                        createAlertDialog(context).then((onValue) {
+                          SnackBar mySnackbar = SnackBar(
+                            content: Text('sent!'),
+                          );
+                          Scaffold.of(context).showSnackBar(mySnackbar);
+                        });
+                        
+                        
+                      } else {
+                        SnackBar alertSnackbar = SnackBar(
+                          content: Text('Recording First.'),
+                        );
+                        Scaffold.of(context).showSnackBar(alertSnackbar);
+                      }
                     },
                   ),
                 ),
@@ -156,51 +202,38 @@ class _WritePageState extends State<WritePage> {
   }
 
   AudioPlayer audioPlayer = AudioPlayer();
-  _playRec() async{
+  _playRec() async {
     print("Search recording file : " + audioPath);
 
-    try{
+    try {
       io.File fiRec = io.File(audioPath);
-      if(fiRec.existsSync()) {
+      if (fiRec.existsSync()) {
         int result = await audioPlayer.play(audioPath, isLocal: true);
         if (result == 1) {
           _isPlaying = true;
           print("Success");
-        }
-         else
-        {
+        } else {
           print("Fail");
         }
-        setState(() {
-          
-        });
+        setState(() {});
       }
-    }
-    catch(Exception){
-    }
+    } catch (Exception) {}
   }
 
-  _stopPlayRec() async{
+  _stopPlayRec() async {
     print("Search recording file : " + audioPath);
 
-    try{
+    try {
       int result = await audioPlayer.stop();
       if (result == 1) {
         _isPlaying = false;
         print("Success");
-      }
-        else
-      {
+      } else {
         print("Fail");
       }
-      setState(() {
-          
-        });
-    }
-    catch(Exception){
-    }
+      setState(() {});
+    } catch (Exception) {}
   }
-
 
   _start() async {
     try {
@@ -248,37 +281,47 @@ class _WritePageState extends State<WritePage> {
     try {
       String directory = appDocDirectory.path;
       liRecFiles = io.Directory("$directory/").listSync();
-      if(liRecFiles.length > 0) { _hasRecFile = true; }
-      else { _hasRecFile = false; }
+      if (liRecFiles.length > 0) {
+        _hasRecFile = true;
+      } else {
+        _hasRecFile = false;
+      }
     } catch (Exception) {}
   }
 
-  _deleteRec() async{
-    print ("Delete recording dir : " + appDocDirectory.path);
+  _deleteRec() async {
+    print("Delete recording dir : " + appDocDirectory.path);
 
-    try{
+    try {
       String directory = appDocDirectory.path;
       io.Directory diRec = io.Directory("$directory/");
-      if(diRec.existsSync()){
+      if (diRec.existsSync()) {
         diRec.deleteSync(recursive: true);
         _hasRecFile = false;
       }
-    }
-    catch(Exception) {}
+    } catch (Exception) {}
   }
 
-  Future _uploadFile() async{
+  Future _uploadFile(TextEditingController _customController) async {
     // FirebaseStorage _storage = FirebaseStorage(storageBucket: 'gs://jtbcontract.appspot.com');
     File file = widget.localFileSystem.file(audioPath);
-    
-    // 디렉토리 경로 어떻게 할지 생각해보자.
-    // 상대방 전화번호 or 카카오톡 id or google ID / 파일.m4a << 
+    String myDirName = 
+        Provider.of<UserInfomation>(context).details.userEmail;
+    myDirName = myDirName.substring(0, myDirName.lastIndexOf('@'));
+    String friendDirName = _customController.text;
 
-    StorageReference firebaseStorageRef = FirebaseStorage.instance.ref().child(file.basename);
+    String savedPath = '/' + myDirName + '/' + friendDirName + '/' + file.basename;
+    File savedfile = widget.localFileSystem.file(savedPath);
+    
+    // 보내고 나서는 DB에 저장해야 한다.  보낸사람 , 받는사람 (전화번호), 파일명, 승인상태
+
+    StorageReference firebaseStorageRef =
+        FirebaseStorage.instance.ref().child(savedPath);
     StorageUploadTask uploadTask = firebaseStorageRef.putFile(
-      file, StorageMetadata(
+      file,
+      StorageMetadata(
         contentType: 'audio/m4a',
-        customMetadata: <String, String>{'file':'audio'},
+        customMetadata: <String, String>{'file': 'audio'},
       ),
     );
     //StorageTaskSnapshot taskSnapshot = await uploadTask.onComplete;

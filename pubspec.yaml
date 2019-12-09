@@ -36,6 +36,7 @@ dependencies:
   intl: ^0.16.0
   audioplayers : ^0.13.5
   firebase_storage :
+  flutter_sms : ^1.1.0
 
 dev_dependencies:
   flutter_test:
