@@ -6,7 +6,9 @@ import 'package:file/local.dart';
 import 'package:flutter/material.dart';
 import 'package:audio_recorder/audio_recorder.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
+import 'package:jtbcontract/friendpage.dart';
 
 import 'dart:io' as io;
 import 'package:path_provider/path_provider.dart';
@@ -25,6 +27,9 @@ class WritePage extends StatefulWidget {
 }
 
 class _WritePageState extends State<WritePage> {
+
+  final DatabaseReference database = FirebaseDatabase.instance.reference();
+
   Recording _recording = new Recording();
 
   Random random = new Random();
@@ -311,9 +316,12 @@ class _WritePageState extends State<WritePage> {
     String friendDirName = _customController.text;
 
     String savedPath = '/' + myDirName + '/' + friendDirName + '/' + file.basename;
-    File savedfile = widget.localFileSystem.file(savedPath);
     
+    
+    // send data to firbase database.
     // 보내고 나서는 DB에 저장해야 한다.  보낸사람 , 받는사람 (전화번호), 파일명, 승인상태
+    // 승인 상태 : wait, approval, reject
+    await writeData(myDirName, friendDirName, savedPath, file.basename);
 
     StorageReference firebaseStorageRef =
         FirebaseStorage.instance.ref().child(savedPath);
@@ -329,4 +337,16 @@ class _WritePageState extends State<WritePage> {
       print("uploaded.");
     });
   }
+  
+  Future writeData(String _myDirName, String _friendDirName, String _savedPath, String _fileName) async
+  {
+    database.child(_myDirName + '_' + _fileName.substring(0, _fileName.length - 4)).set({
+      'sender' : _myDirName,
+      'receiver' : _friendDirName,
+      'savedPath' : _savedPath,
+      'status' : 'wait',
+    });
+
+  }
+
 }
