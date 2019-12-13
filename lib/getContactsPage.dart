@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:contacts_service/contacts_service.dart';
 import 'package:jtbcontract/inputPhoneNumber.dart';
+import 'package:jtbcontract/service/routingConstants.dart';
 
 class GetContactPage extends StatefulWidget {
   @override
@@ -121,7 +122,8 @@ class _GetContactPageState extends State<GetContactPage> {
 
   inputPhoneNumber() async {
     selectedPhoneNumber = await Navigator.push(context, MaterialPageRoute(builder: (context) => InputPhoneNumber()));
-    if(selectedPhoneNumber != null) Navigator.pop(context, selectedPhoneNumber);
+    //selectedPhoneNumber = await Navigator.pushNamed(context, InputPhoneNumberRoute);
+    // if(selectedPhoneNumber != null) Navigator.pop(context, selectedPhoneNumber);
   }
 
   getPhoneNumber(Contact _c) async{

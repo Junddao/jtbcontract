@@ -6,6 +6,8 @@ class RootPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LoginPage();
+    return Scaffold(
+      body: LoginPage(),
+    );
   }
 }

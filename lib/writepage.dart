@@ -11,6 +11,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_sms/flutter_sms.dart';
 import 'package:jtbcontract/getContactsPage.dart';
+import 'package:jtbcontract/service/routingConstants.dart';
 
 import 'dart:io' as io;
 import 'package:path_provider/path_provider.dart';
@@ -357,8 +358,8 @@ class _WritePageState extends State<WritePage> {
   }
 
   _navigateAndDisplaySelection(BuildContext context) async {
-    phoneNumber = await Navigator.of(context)
-        .push(MaterialPageRoute(builder: (context) => GetContactPage()));
+    phoneNumber = await Navigator.pushNamed(context, GetContactRoute);
+        // .push(MaterialPageRoute(builder: (context) => GetContactPage()));
     if(phoneNumber != null)
     {
       phoneNumber = (phoneNumber as String).replaceAll('-', '');

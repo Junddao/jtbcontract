@@ -39,7 +39,6 @@ dependencies:
   flutter_sms : ^1.1.0
   firebase_database :
   contacts_service : 
-  intl_phone_number_input :
 
 dev_dependencies:
   flutter_test:

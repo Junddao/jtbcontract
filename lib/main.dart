@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:jtbcontract/data/tabstates.dart';
 import 'package:jtbcontract/data/userinfo.dart';
-import 'package:jtbcontract/loginpage.dart';
 import 'package:jtbcontract/rootpage.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:splashscreen/splashscreen.dart';
 
+import 'service/router.dart';
+import 'package:jtbcontract/service/routingConstants.dart';
+
 void main(){
   runApp(
     new MaterialApp(
+        
       home : MyApp(),
-      
+    
+      onGenerateRoute: Router.generateRoute,
+      //initialRoute: RootPageRoute,
     )
   );
 }
@@ -53,7 +59,8 @@ class _MyAppState extends State<MyApp>{
 class AfterSplash extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-   
+    
+    
     permission();
     return MultiProvider(
       providers: [
@@ -62,8 +69,8 @@ class AfterSplash extends StatelessWidget {
         // ChangeNotifierProvider<YoutubeInfo> (builder: (context) => YoutubeInfo(),),
       ] ,
       child: MaterialApp(
-        home : RootPage(),
-
+        home: RootPage(),
+        
       )
     );
   }

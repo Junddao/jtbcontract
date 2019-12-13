@@ -7,6 +7,7 @@ import 'package:jtbcontract/data/userinfo.dart';
 import 'package:jtbcontract/tabpage.dart';
 import 'package:provider/provider.dart';
 
+
 class LoginPage extends StatefulWidget {
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -58,8 +59,9 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return new Scaffold(
-      body: Builder(
+    return new MaterialApp(
+      
+      home : Builder(
         builder: (context) => Stack(
           fit: StackFit.expand,
           children: <Widget>[

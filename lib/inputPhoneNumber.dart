@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 
 class InputPhoneNumber extends StatefulWidget {
   @override
@@ -16,12 +15,6 @@ class _InputPhoneNumberState extends State<InputPhoneNumber> {
     super.dispose();
   }
 
-  @override
-  void initState() {
-    
-    super.initState();
-  }
- 
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
