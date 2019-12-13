@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:jtbcontract/data/tabstates.dart';
 import 'package:jtbcontract/data/userinfo.dart';
+import 'package:jtbcontract/loginpage.dart';
 import 'package:jtbcontract/rootpage.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +11,7 @@ void main(){
   runApp(
     new MaterialApp(
       home : MyApp(),
+      
     )
   );
 }
@@ -70,6 +72,7 @@ class AfterSplash extends StatelessWidget {
 
     await PermissionHandler().requestPermissions([PermissionGroup.microphone]);
     await PermissionHandler().requestPermissions([PermissionGroup.storage]);
+    await PermissionHandler().requestPermissions([PermissionGroup.contacts]);
     
   }
 }
