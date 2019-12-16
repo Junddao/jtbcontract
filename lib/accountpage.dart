@@ -35,6 +35,12 @@ class _AccountPageState extends State<AccountPage> {
               "Provider : " + Provider.of<UserInfomation>(context).details.providerDetails,
               style:  TextStyle(fontWeight: FontWeight.bold, color: Colors.black,fontSize: 20.0),
             ),
+             SizedBox(height:10.0),
+            Text(
+              "phone Number : " + Provider.of<UserInfomation>(context).details.phoneNumber,
+              style:  TextStyle(fontWeight: FontWeight.bold, color: Colors.black,fontSize: 20.0),
+            ),
+         
           ],
         ),
       ),

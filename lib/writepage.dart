@@ -10,6 +10,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_sms/flutter_sms.dart';
+import 'package:jtbcontract/data/approvalCondition.dart';
 import 'package:jtbcontract/getContactsPage.dart';
 import 'package:jtbcontract/service/routingConstants.dart';
 
@@ -67,8 +68,6 @@ class _WritePageState extends State<WritePage> {
       setState(() {});
     });
 
-    TextEditingController customController = new TextEditingController();
-
     void _sendSMS(String message, List<String> recipents) async {
       String _result =
           await FlutterSms.sendSMS(message: message, recipients: recipents)
@@ -117,7 +116,7 @@ class _WritePageState extends State<WritePage> {
                 Expanded(
                   flex: 1,
                   child: FlatButton(
-                    color: Colors.white,
+                    //color: Colors.white,
                     padding: EdgeInsets.only(left: 20, bottom: 20),
                     child: Row(
                       children: <Widget>[
@@ -139,7 +138,7 @@ class _WritePageState extends State<WritePage> {
                 Expanded(
                   flex: 1,
                   child: FlatButton(
-                    color: Colors.white,
+                    //color: Colors.white,
                     padding: EdgeInsets.only(right: 20, bottom: 20),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -314,20 +313,20 @@ class _WritePageState extends State<WritePage> {
   }
 
  
-  Future _uploadFile(TextEditingController _customController) async {
+  Future _uploadFile() async {
     // FirebaseStorage _storage = FirebaseStorage(storageBucket: 'gs://jtbcontract.appspot.com');
     File file = widget.localFileSystem.file(audioPath);
-    String myDirName = Provider.of<UserInfomation>(context).details.userEmail;
-    myDirName = myDirName.substring(0, myDirName.lastIndexOf('@'));
-    String friendDirName = _customController.text;
+    String myDirNumber = Provider.of<UserInfomation>(context).details.phoneNumber;
+   
+    String friendDirNumber = phoneNumber;
 
     String savedPath =
-        '/' + myDirName + '/' + friendDirName + '/' + file.basename;
+        '/' + myDirNumber + '/' + friendDirNumber + '/' + file.basename;
 
     // send data to firbase database.
     // 보내고 나서는 DB에 저장해야 한다.  보낸사람 , 받는사람 (전화번호), 파일명, 승인상태
     // 승인 상태 : wait, approval, reject
-    await createData(myDirName, friendDirName, savedPath, file.basename);
+    await createData(myDirNumber, friendDirNumber, savedPath, file.basename, ApprovalCondition.ready);
 
     StorageReference firebaseStorageRef =
         FirebaseStorage.instance.ref().child(savedPath);
@@ -344,27 +343,36 @@ class _WritePageState extends State<WritePage> {
     });
   }
 
-  Future createData(String _myDirName, String _friendDirName, String _savedPath,
-      String _fileName) async {
+  Future createData(String _myDirNumber, String _friendDirName, String _savedPath, String _fileName, String _approvalCondition) async {
     database
-        .child(_myDirName + '_' + _fileName.substring(0, _fileName.length - 4))
+        .child(_myDirNumber).push()
         .set({
-      'sender': _myDirName,
+      'sender': _myDirNumber,
       'receiver': _friendDirName,
       'savedPath': _savedPath,
-      'status': 'wait',
+      'status': _approvalCondition,
+      'content': '',
+    });
+    database
+        .child(_friendDirName).push()
+        .set({
+      'sender': _myDirNumber,
+      'receiver': _friendDirName,
+      'savedPath': _savedPath,
+      'status': _approvalCondition,
       'content': '',
     });
   }
 
   _navigateAndDisplaySelection(BuildContext context) async {
-    phoneNumber = await Navigator.pushNamed(context, GetContactRoute);
-        // .push(MaterialPageRoute(builder: (context) => GetContactPage()));
+    // phoneNumber = await Navigator.pushNamed(context, GetContactRoute);
+      phoneNumber = await Navigator.push(context, MaterialPageRoute(builder: (context) => GetContactPage()));
     if(phoneNumber != null)
     {
       phoneNumber = (phoneNumber as String).replaceAll('-', '');
     }
     Navigator.of(context).pop(true);
+    await _uploadFile();  // upload voice file.
   }
 
   createAlertDialog(BuildContext context) async {
@@ -388,8 +396,7 @@ class _WritePageState extends State<WritePage> {
                 onPressed: () {
                   
                   _navigateAndDisplaySelection(context);
-                  // Navigator.of(context).pop(customController.text.toString());
-                  // _uploadFile(customController);
+                  
                 },
               ),
             ),
@@ -400,20 +407,10 @@ class _WritePageState extends State<WritePage> {
                 color: Colors.yellow,
                 child: Text('Kakao Talk'),
                 onPressed: () {
-                  // Navigator.of(context).pop(customController.text.toString());
-                  // _uploadFile(customController);
+                  
                 },
               ),
             ),
-
-            // MaterialButton(
-            //   elevation: 5.0,
-            //   child: Text('Send'),
-            //   onPressed: () {
-            //     Navigator.of(context).pop(customController.text.toString());
-            //     _uploadFile(customController);
-            //   },
-            // )
           ],
         );
       }

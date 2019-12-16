@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:contacts_service/contacts_service.dart';
 import 'package:jtbcontract/inputPhoneNumber.dart';
 import 'package:jtbcontract/service/routingConstants.dart';
+import 'package:jtbcontract/service/soundSearcher.dart';
+
 
 class GetContactPage extends StatefulWidget {
   @override
@@ -10,6 +12,7 @@ class GetContactPage extends StatefulWidget {
 
 class _GetContactPageState extends State<GetContactPage> {
   List<Contact> _contacts;
+  var contacts;
   String selectedPhoneNumber;
 
   @override
@@ -17,16 +20,33 @@ class _GetContactPageState extends State<GetContactPage> {
    
     super.initState();
     refreshContacts();
+    _textEditingController.addListener(textListener);
+  }
+
+  @override
+  void dispose(){
+    super.dispose();
+    _textEditingController.dispose();
+  }
+
+
+  textListener() async{
+    List<Contact> searchedContact = new List<Contact>();
+    for(Contact c in contacts){
+      bool result = await searchPhoneNumber(c);
+      if(result == true) searchedContact.add(c);
+    }
+    
+    setState(() {
+      _contacts = searchedContact;
+    });
   }
 
   void refreshContacts() async{
     //PermissionStatus permissionStatus = await _getContactPermission();
     //if (permissionStatus == PermissionStatus.granted) {
       // Load without thumbnails initially.
-    var contacts =
-        (await ContactsService.getContacts(withThumbnails: false)).toList();
-//      var contacts = (await ContactsService.getContactsForPhone("8554964652"))
-//          .toList();
+    contacts = (await ContactsService.getContacts(withThumbnails: false)).toList();
     setState(() {
       _contacts = contacts;
     });
@@ -74,6 +94,7 @@ class _GetContactPageState extends State<GetContactPage> {
   //   }
   // }
 
+  TextEditingController _textEditingController = new TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -91,39 +112,54 @@ class _GetContactPageState extends State<GetContactPage> {
       
       appBar: AppBar(title: Text('Contact')),
 
-      body: SafeArea(
-        child: _contacts != null
-            ? ListView.builder(
-          itemCount: _contacts?.length ?? 0,
-          itemBuilder: (BuildContext context, int index) {
-            Contact c = _contacts?.elementAt(index);
-            return ListTile(
-              onTap: () {
-                // 1. Get Contact
-                getPhoneNumber(c);
-                
-                // 2. Send to DB 
+      body: Column(children: <Widget>[
+        Padding(padding: EdgeInsets.all(5),),
+        Expanded(
+          //flex: 1,
+          child: TextField(
+            controller: _textEditingController,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Search Name',
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 8,
+          child: SafeArea(
+            child: _contacts != null
+                ? ListView.builder(
+              itemCount: _contacts?.length ?? 0,
+              itemBuilder: (BuildContext context, int index) {
+                Contact c = _contacts?.elementAt(index);
+                return ListTile(
+                  onTap: () {
+                    
+                    getPhoneNumber(c);
+                    
+                    Navigator.pop(context, selectedPhoneNumber);
+                  },
+                  leading: (c.avatar != null && c.avatar.length > 0)
+                      ? CircleAvatar(backgroundImage: MemoryImage(c.avatar))
+                      : CircleAvatar(child: Text(c.initials())),
+                  title: Text(c.displayName ?? ""),
 
-                // 3. close page
-                Navigator.pop(context, selectedPhoneNumber);
+                );
               },
-              leading: (c.avatar != null && c.avatar.length > 0)
-                  ? CircleAvatar(backgroundImage: MemoryImage(c.avatar))
-                  : CircleAvatar(child: Text(c.initials())),
-              title: Text(c.displayName ?? ""),
-
-            );
-          },
-        )
-            : Center(child: CircularProgressIndicator(),),
-      ),
+            )
+                : Center(child: CircularProgressIndicator(),),
+          ),
+        ),
+      ],)
+      
+      
     );
   }
 
   inputPhoneNumber() async {
     selectedPhoneNumber = await Navigator.push(context, MaterialPageRoute(builder: (context) => InputPhoneNumber()));
     //selectedPhoneNumber = await Navigator.pushNamed(context, InputPhoneNumberRoute);
-    // if(selectedPhoneNumber != null) Navigator.pop(context, selectedPhoneNumber);
+    if(selectedPhoneNumber != null) Navigator.pop(context, selectedPhoneNumber);
   }
 
   getPhoneNumber(Contact _c) async{
@@ -134,10 +170,17 @@ class _GetContactPageState extends State<GetContactPage> {
         || s.substring(0, 3).contains('016')
         || s.substring(0, 3).contains('017')
         || s.substring(0, 3).contains('019'))
-        {
-          selectedPhoneNumber = s;
-          return;
-        }
+      {
+        selectedPhoneNumber = s;
+        return;
+      }
     }
+  }
+
+  searchPhoneNumber(Contact _c) async{
+    if(SoundSearcher.matchString(_c.displayName, _textEditingController.text)){
+      return true;
+    }
+    else return false;
   }
 }

@@ -18,13 +18,10 @@ class UserInfoDetails{
   final String userName;
   final String photoUrl;
   final String userEmail;
-  final List<ProviderDetails> providerData;
+  final String phoneNumber;
 
-  UserInfoDetails(this.providerDetails, this.userName, this.photoUrl, this.userEmail, this.providerData);
+  
+  UserInfoDetails(this.providerDetails, this.userName, this.photoUrl, this.userEmail, this.phoneNumber);
 }
 
-class ProviderDetails {
-  ProviderDetails(this.providerDetails);
-  final String providerDetails;
-}
 
