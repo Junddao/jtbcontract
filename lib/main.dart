@@ -76,6 +76,8 @@ class AfterSplash extends StatelessWidget {
     await PermissionHandler().requestPermissions([PermissionGroup.storage]);
     await PermissionHandler().requestPermissions([PermissionGroup.contacts]);
     await PermissionHandler().requestPermissions([PermissionGroup.phone]);
+    await PermissionHandler().requestPermissions([PermissionGroup.sms]);
+   
   }
 }
 

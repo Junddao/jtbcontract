@@ -8,11 +8,11 @@ import 'package:flutter/material.dart';
 import 'package:audio_recorder/audio_recorder.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_sms/flutter_sms.dart';
 import 'package:jtbcontract/data/approvalCondition.dart';
 import 'package:jtbcontract/getContactsPage.dart';
-import 'package:jtbcontract/service/routingConstants.dart';
+import 'package:sms_maintained/sms.dart';
 
 import 'dart:io' as io;
 import 'package:path_provider/path_provider.dart';
@@ -36,6 +36,8 @@ class WritePage extends StatefulWidget {
 
 class _WritePageState extends State<WritePage> {
   final DatabaseReference database = FirebaseDatabase.instance.reference();
+  // final String appName = 'https://play.google.com/store/apps/details?id=com.jtbcompany.jtbcontract';
+  final String appName = 'https://play.google.com/store/apps/details?id=com.jtb.jtbMusicPlayer';
 
   Recording _recording = new Recording();
   AudioPlayer audioPlayer = AudioPlayer();
@@ -68,14 +70,7 @@ class _WritePageState extends State<WritePage> {
       setState(() {});
     });
 
-    void _sendSMS(String message, List<String> recipents) async {
-      String _result =
-          await FlutterSms.sendSMS(message: message, recipients: recipents)
-              .catchError((onError) {
-        print(onError);
-      });
-      print(_result);
-    }
+    
 
     return Container(
       alignment: Alignment.center,
@@ -313,8 +308,8 @@ class _WritePageState extends State<WritePage> {
   }
 
  
-  Future _uploadFile() async {
     // FirebaseStorage _storage = FirebaseStorage(storageBucket: 'gs://jtbcontract.appspot.com');
+  Future _uploadFile() async {
     File file = widget.localFileSystem.file(audioPath);
     String myDirNumber = Provider.of<UserInfomation>(context).details.phoneNumber;
    
@@ -373,6 +368,20 @@ class _WritePageState extends State<WritePage> {
     }
     Navigator.of(context).pop(true);
     await _uploadFile();  // upload voice file.
+    await _sendSMS(appName, phoneNumber);
+  } 
+
+  Future _sendSMS(String message, String recipents) async {
+    SmsSender sender = new SmsSender();
+    SmsMessage _message = new SmsMessage(recipents, message);
+    _message.onStateChanged.listen((state) {
+      if (state == SmsMessageState.Sent) {
+        print("SMS is sent!");
+      } else if (state == SmsMessageState.Delivered) {
+        print("SMS is delivered!");
+      }
+    });
+    sender.sendSms(_message);
   }
 
   createAlertDialog(BuildContext context) async {
