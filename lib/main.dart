@@ -71,7 +71,6 @@ class AfterSplash extends StatelessWidget {
   }
 
   void permission() async {
-
     await PermissionHandler().requestPermissions([PermissionGroup.microphone]);
     await PermissionHandler().requestPermissions([PermissionGroup.storage]);
     await PermissionHandler().requestPermissions([PermissionGroup.contacts]);

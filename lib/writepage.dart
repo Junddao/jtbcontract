@@ -164,25 +164,6 @@ class _WritePageState extends State<WritePage> {
         ],
       ),
     );
-    // body: ListView.builder(
-    //   itemCount: RecFilesFileName.length,
-    //   itemBuilder: (BuildContext context, int index) {
-
-    //   },
-
-    //   floatingActionButton: FloatingActionButton.extended(
-    //     onPressed: () {
-    //       _isMicPushed ? voiceRecordStop() : voiceRecordStart();
-    //       setState(() {
-    //         _search();
-    //       });
-    //     },
-    //     label: Text('Record'),
-    //     icon: Icon(Icons.mic),
-    //     foregroundColor: Colors.black,
-    //     backgroundColor: _isMicPushed ? Colors.pink : Colors.white,
-    //   ),
-    // );
   }
 
   _createAlertDialog(BuildContext context) async{

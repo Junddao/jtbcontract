@@ -39,6 +39,7 @@ dependencies:
   contacts_service : 
   flt_telephony_info :
   audio_recorder: ^1.0.1
+  http :
 
 
 dev_dependencies:
