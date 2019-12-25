@@ -1,3 +1,5 @@
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:jtbcontract/data/tabstates.dart';
 import 'package:jtbcontract/data/userinfo.dart';
@@ -25,6 +27,52 @@ class MyApp extends StatefulWidget{
 }
 
 class _MyAppState extends State<MyApp>{
+
+  String textValue = 'Hello World';
+  FirebaseMessaging firebaseMessaging = new FirebaseMessaging();
+
+  @override
+  void initState() {
+    firebaseMessaging.configure(
+      onLaunch: (Map<String, dynamic> msg){
+        print('onlaunch');
+
+      },
+      onResume: (Map<String, dynamic> msg){
+        print('onResume');
+
+      },
+      onMessage: (Map<String, dynamic> msg){
+        print('onMessage');
+
+      }
+    );
+    firebaseMessaging.requestNotificationPermissions(
+      const IosNotificationSettings(
+        sound: true,
+        alert: true,
+        badge: true,
+      )
+    );
+    firebaseMessaging.onIosSettingsRegistered.listen((IosNotificationSettings setting){
+      print('IOS setting');
+    });
+    firebaseMessaging.getToken().then((token){
+      update(token);
+    });
+    super.initState();
+  }
+
+  
+  update(String token){
+    print(token);
+  
+    textValue = token;
+    setState(() {
+      
+    });  
+  }
+
   @override
   Widget build(BuildContext context) {
 

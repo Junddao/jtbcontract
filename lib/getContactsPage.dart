@@ -110,22 +110,30 @@ class _GetContactPageState extends State<GetContactPage> {
       ),
         
       
-      appBar: AppBar(title: Text('Contact')),
+      appBar: AppBar(
+        title: Text('Contact'),
+        backgroundColor: Colors.black,
+      ),
 
       body: Column(children: <Widget>[
         Padding(padding: EdgeInsets.all(5),),
-        Expanded(
-          //flex: 1,
-          child: TextField(
-            controller: _textEditingController,
-            decoration: InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: 'Search Name',
+        SizedBox(
+          height: 100,
+          child: Padding(
+            padding: EdgeInsets.all(10),
+            child: TextField(
+              
+              controller: _textEditingController,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Search Name',
+              ),
             ),
           ),
         ),
+   
         Expanded(
-          flex: 8,
+          flex: 1,
           child: SafeArea(
             child: _contacts != null
                 ? ListView.builder(
@@ -140,8 +148,8 @@ class _GetContactPageState extends State<GetContactPage> {
                     Navigator.pop(context, selectedPhoneNumber);
                   },
                   leading: (c.avatar != null && c.avatar.length > 0)
-                      ? CircleAvatar(backgroundImage: MemoryImage(c.avatar))
-                      : CircleAvatar(child: Text(c.initials())),
+                      ? CircleAvatar(backgroundImage: MemoryImage(c.avatar), backgroundColor: Colors.black, foregroundColor: Colors.white,)
+                      : CircleAvatar(child: Text(c.initials(),), backgroundColor: Colors.black, foregroundColor: Colors.white,),
                   title: Text(c.displayName ?? ""),
 
                 );

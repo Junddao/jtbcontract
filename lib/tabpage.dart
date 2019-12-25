@@ -38,20 +38,20 @@ class _TabPageState extends State<TabPage> {
               bottomOpacity: 0.0,
               elevation: 0.0,
               automaticallyImplyLeading: false,
-              actions: <Widget>[
-                IconButton(
-                  icon: Icon(
-                    FontAwesomeIcons.signOutAlt,
-                    size: 20.0,
-                    color: Colors.white,
-                  ),
-                  onPressed: () {
-                    _gSignIn.signOut();
-                    print('Signed out');
-                    Navigator.pop(context);
-                  },
-                ),
-              ],
+              // actions: <Widget>[
+              //   IconButton(
+              //     icon: Icon(
+              //       FontAwesomeIcons.signOutAlt,
+              //       size: 20.0,
+              //       color: Colors.white,
+              //     ),
+              //     onPressed: () {
+              //       _gSignIn.signOut();
+              //       print('Signed out');
+              //       Navigator.pop(context);
+              //     },
+              //   ),
+              // ],
             ),
             body: _tabs[Provider.of<TabStates>(context).selectedIndex],
             bottomNavigationBar: new Theme(

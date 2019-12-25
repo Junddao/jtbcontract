@@ -26,14 +26,17 @@ class _InputPhoneNumberState extends State<InputPhoneNumber> {
             children: <Widget>[
               Expanded(
                 flex: 10,
-                child: TextField(
-                  controller: myController,
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'phone Number',
+                child: Padding(
+                  padding: EdgeInsets.all(10),
+                  child: TextField(
+                    controller: myController,
+                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'phone Number',
+                    ),
                   ),
-                ),
+                ), 
               ),
               
               Expanded(

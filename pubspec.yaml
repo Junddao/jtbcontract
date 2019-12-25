@@ -40,7 +40,8 @@ dependencies:
   flt_telephony_info :
   audio_recorder: ^1.0.1
   http :
-
+  firebase_messaging : 
+  cloud_firestore:
 
 dev_dependencies:
   flutter_test:

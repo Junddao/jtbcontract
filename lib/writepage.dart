@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:audio_recorder/audio_recorder.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:jtbcontract/data/approvalCondition.dart';
 import 'package:jtbcontract/getContactsPage.dart';
@@ -36,8 +35,8 @@ class WritePage extends StatefulWidget {
 
 class _WritePageState extends State<WritePage> {
   final DatabaseReference database = FirebaseDatabase.instance.reference();
-  // final String appName = 'https://play.google.com/store/apps/details?id=com.jtbcompany.jtbcontract';
-  final String appName = 'https://play.google.com/store/apps/details?id=com.jtb.jtbMusicPlayer';
+  final String appName = 'https://play.google.com/store/apps/details?id=com.jtbcompany.jtbcontract';
+  
 
   Recording _recording = new Recording();
   AudioPlayer audioPlayer = AudioPlayer();
@@ -349,7 +348,7 @@ class _WritePageState extends State<WritePage> {
     }
     Navigator.of(context).pop(true);
     await _uploadFile();  // upload voice file.
-    await _sendSMS(appName, phoneNumber);
+    //await _sendSMS(appName, phoneNumber);
   } 
 
   Future _sendSMS(String message, String recipents) async {
