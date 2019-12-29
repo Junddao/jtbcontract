@@ -69,7 +69,7 @@ class _SearchPageState extends State<SearchPage>
     ctr = new TabController(vsync: this, length: 2);
     
     FirebaseDatabase firebaseDatabase = FirebaseDatabase.instance;
-    DatabaseReference itemRef = firebaseDatabase.reference().child(myPhoneNumber);
+    DatabaseReference itemRef = firebaseDatabase.reference().child('Sender').child(myPhoneNumber);
     itemRef.onChildChanged.listen(_onEntryChanged);
     itemRef.onChildAdded.listen(_onEntryAdded);
 
@@ -78,7 +78,7 @@ class _SearchPageState extends State<SearchPage>
     super.initState();
   }
 
-  Future<StreamSubscription> getStatusStream(DatabaseReference _itemRef, _updatedStatus) async{
+  Future<StreamSubscription<Event>> getStatusStream(DatabaseReference _itemRef, _updatedStatus) async{
     StreamSubscription<Event> _subscription;
     _itemRef.once().then((DataSnapshot snap){
       var keys = snap.value.keys;
@@ -102,14 +102,12 @@ class _SearchPageState extends State<SearchPage>
   }
 
   _onEntryChanged(Event event){
-    getDBData();
     setState(() {
       
     });
   }
 
   _onEntryAdded(Event event){
-    getDBData();
     setState(() {
       
     });
@@ -127,27 +125,41 @@ class _SearchPageState extends State<SearchPage>
     DatabaseReference ref = FirebaseDatabase.instance.reference();
     myPhoneNumber =
         Provider.of<UserInfomation>(context, listen: false).details.phoneNumber;
-    ref.child(myPhoneNumber).once().then((DataSnapshot snap) {
-      var keys = snap.value.keys;
-      var data = snap.value;
-      allData.clear();
-      sentData.clear();
-      receivedData.clear();
-      for (var key in keys) {
-        DBData d = new DBData(key, data[key]['sender'], data[key]['receiver'],
-            data[key]['savedPath'], data[key]['status'], data[key]['contents']);
-        allData.add(d);
-        if (d.sender == myPhoneNumber) {
-          sentData.add(d);
+    sentData.clear();
+    receivedData.clear();
+    try{
+      ref.child('Sender').child(myPhoneNumber).once().then((DataSnapshot snap) {
+        var keys = snap.value.keys;
+        var data = snap.value;
+        for (var key in keys) {
+          DBData d = new DBData(key, data[key]['senderPhoneNumber'], data[key]['senderName'], data[key]['receiverPhoneNumber'], data[key]['receiverName'],
+              data[key]['savedPath'], data[key]['status'], data[key]['contents']);
+          if (d.senderPhoneNumber == myPhoneNumber) {
+            sentData.add(d);
+          }
         }
-        if (d.receiver == myPhoneNumber) {
-          receivedData.add(d);
-        }
-      }
-      setState(() {
-        print('length : ${allData.length}');
+
       });
-    });
+      ref.child('Receiver').child(myPhoneNumber).once().then((DataSnapshot snap){
+        var keys = snap.value.keys;
+        var data = snap.value;
+        for (var key in keys) {
+          DBData d = new DBData(key, data[key]['senderPhoneNumber'], data[key]['senderName'], data[key]['receiverPhoneNumber'], data[key]['receiverName'],
+              data[key]['savedPath'], data[key]['status'], data[key]['contents']);
+          if (d.receiverPhoneNumber == myPhoneNumber) {
+            receivedData.add(d);
+          }
+        }
+        setState(() {
+          print('length : ${sentData.length}');
+          print('length : ${receivedData.length}');
+        });
+      });  
+    }
+    catch(Exception){
+      print('error');
+    }
+    
   }
 
   setStatusOfDBData(MyDialogAction myDialogAction, DBData dbData) async {
@@ -159,10 +171,10 @@ class _SearchPageState extends State<SearchPage>
     DatabaseReference ref = FirebaseDatabase.instance.reference();
 
     if(myDialogAction == MyDialogAction.yes){
-      ref.child(myPhoneNumber).child(dbData.key).child('status').set('승인');
+      ref.child('Sender').child(myPhoneNumber).child(dbData.key).child('status').set('승인');
     }
     else
-      ref.child(myPhoneNumber).child(dbData.key).child('status').set('거절');
+      ref.child('Sender').child(myPhoneNumber).child(dbData.key).child('status').set('거절');
     setState(() { });
   }
 
@@ -176,10 +188,10 @@ class _SearchPageState extends State<SearchPage>
 
     DatabaseReference ref = FirebaseDatabase.instance.reference();
     if(myDialogAction == MyDialogAction.yes){
-      ref.child(dbData.receiver).child(modifyKey).child('status').set('승인');
+      ref.child('Receiver').child(dbData.receiverPhoneNumber).child(modifyKey).child('status').set('승인');
     }
     else{
-      ref.child(dbData.receiver).child(modifyKey).child('status').set('거절');
+      ref.child('Receiver').child(dbData.receiverPhoneNumber).child(modifyKey).child('status').set('거절');
     }
 
     setState(() {
@@ -191,17 +203,17 @@ class _SearchPageState extends State<SearchPage>
   getFriendDBData(String friendPhoneNumber) async{
     DatabaseReference ref = FirebaseDatabase.instance.reference();
     
-    await ref.child(friendPhoneNumber).once().then((DataSnapshot snap) {
+    await ref.child('Receiver').child(friendPhoneNumber).once().then((DataSnapshot snap) {
       var keys = snap.value.keys;
       var data = snap.value;
       friendAllData.clear();
       friendReceivedData.clear();
       for (var key in keys) {
-        DBData d = new DBData(key, data[key]['sender'], data[key]['receiver'],
+        DBData d = new DBData(key, data[key]['senderPhoneNumber'], data[key]['senderName'], data[key]['receiverPhoneNumber'], data[key]['receiverName'],
             data[key]['savedPath'], data[key]['status'], data[key]['contents']);
         friendAllData.add(d);
         
-        if (d.receiver == friendPhoneNumber) {
+        if (d.receiverPhoneNumber == friendPhoneNumber) {
           friendReceivedData.add(d);
         }
       }
@@ -214,7 +226,7 @@ class _SearchPageState extends State<SearchPage>
   deleteDBData(int index) async{
     String removeKey = sentData[index].key;
     String savedPath = sentData[index].savedPath;
-    String friendPhoneNumber = sentData[index].receiver;
+    String friendPhoneNumber = sentData[index].receiverPhoneNumber;
 
     // 친구 DB 정보 가져와서 
     await getFriendDBData(friendPhoneNumber);
@@ -223,7 +235,7 @@ class _SearchPageState extends State<SearchPage>
 
     // 내 보낸 DB 지우고, 
     DatabaseReference ref = FirebaseDatabase.instance.reference();
-    await ref.child(myPhoneNumber).child(removeKey).remove().then((_)
+    await ref.child('Sender').child(myPhoneNumber).child(removeKey).remove().then((_)
     {
       print('delete $removeKey');
       setState(() {
@@ -243,7 +255,7 @@ class _SearchPageState extends State<SearchPage>
     }
 
     DatabaseReference ref = FirebaseDatabase.instance.reference();
-    await ref.child(freindPhoneNumber).child(removeKey).remove().then((_)
+    await ref.child('Receiver').child(freindPhoneNumber).child(removeKey).remove().then((_)
     {
       print('delete $removeKey');
       setState(() {
@@ -305,8 +317,10 @@ class _SearchPageState extends State<SearchPage>
             itemCount: receivedData.length,
             itemBuilder: (_, index) {
               DBData dbData = new DBData(receivedData[index].key,
-                receivedData[index].sender,
-                receivedData[index].receiver,
+                receivedData[index].senderPhoneNumber,
+                receivedData[index].senderName,
+                receivedData[index].receiverPhoneNumber,
+                receivedData[index].receiverName,
                 receivedData[index].savedPath,
                 receivedData[index].status,
                 receivedData[index].contents);
@@ -328,8 +342,10 @@ class _SearchPageState extends State<SearchPage>
             itemCount: sentData.length,
             itemBuilder: (_, index) {
               DBData dbData = new DBData(sentData[index].key,
-                sentData[index].sender,
-                sentData[index].receiver,
+                sentData[index].senderPhoneNumber,
+                sentData[index].senderName,
+                sentData[index].receiverPhoneNumber,
+                sentData[index].receiverName,
                 sentData[index].savedPath,
                 sentData[index].status,
                 sentData[index].contents);
@@ -498,11 +514,8 @@ class _SearchPageState extends State<SearchPage>
                 child: new Container(
                   child: new Column(
                     children: <Widget>[
-                      new Text('Sender : ' + dbData.sender),
-                      new Text('Receiver : ' + dbData.receiver),
-                      //new Text('savedPath : $_savedPath'),
-                      //new Text('status : $_status'),
-                      //new Text('Sender : $_contents'),
+                      new Text('Sender : ' + dbData.senderName + '(' + dbData.senderPhoneNumber + ')',),
+                      new Text('Receiver : ' + dbData.receiverName + '('  + dbData.receiverPhoneNumber+ ')'),
                     ],
                   ),
                 ),
@@ -583,8 +596,8 @@ class _SearchPageState extends State<SearchPage>
                 child: new Container(
                   child: new Column(
                     children: <Widget>[
-                      new Text('Sender : ' + dbData.sender,),
-                      new Text('Receiver : ' + dbData.receiver),
+                      new Text('Sender : ' + dbData.senderName + '(' + dbData.senderPhoneNumber + ')',),
+                      new Text('Receiver : ' + dbData.receiverName + '('  + dbData.receiverPhoneNumber+ ')'),
                       //new Text('savedPath : $_savedPath'),
                       //new Text('status : $_status'),
                       //new Text('Sender : $_contents'),

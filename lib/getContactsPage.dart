@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:contacts_service/contacts_service.dart';
+import 'package:jtbcontract/data/contactUserInfo.dart';
+import 'package:jtbcontract/data/tabstates.dart';
 import 'package:jtbcontract/inputPhoneNumber.dart';
-import 'package:jtbcontract/service/routingConstants.dart';
+import 'package:jtbcontract/saveFriend.dart';
 import 'package:jtbcontract/service/soundSearcher.dart';
+import 'package:provider/provider.dart';
 
 
 class GetContactPage extends StatefulWidget {
@@ -13,7 +16,7 @@ class GetContactPage extends StatefulWidget {
 class _GetContactPageState extends State<GetContactPage> {
   List<Contact> _contacts;
   var contacts;
-  String selectedPhoneNumber;
+  ContactUserInfo contactUserInfo = new ContactUserInfo();
 
   @override
   void initState() {
@@ -58,41 +61,8 @@ class _GetContactPageState extends State<GetContactPage> {
         setState(() => contact.avatar = avatar);
       });
     }
-    //} 
-    // else {
-    //   _handleInvalidPermissions(permissionStatus);
-    // }
   }
 
-//   Future<PermissionStatus> _getContactPermission() async {
-//     PermissionStatus permission = await PermissionHandler()
-//         .checkPermissionStatus(PermissionGroup.contacts);
-//     if (permission != PermissionStatus.granted &&
-//         permission != PermissionStatus.disabled) {
-//       Map<PermissionGroup, PermissionStatus> permissionStatus =
-//           await PermissionHandler()
-//               .requestPermissions([PermissionGroup.contacts]);
-//       return permissionStatus[PermissionGroup.contacts] ??
-//           PermissionStatus.unknown;
-//     } else {
-//       return permission;
-//     }
-//   }
-
-  
-  // void _handleInvalidPermissions(PermissionStatus permissionStatus) {
-  //   if (permissionStatus == PermissionStatus.denied) {
-  //     throw new PlatformException(
-  //         code: "PERMISSION_DENIED",
-  //         message: "Access to location data denied",
-  //         details: null);
-  //   } else if (permissionStatus == PermissionStatus.disabled) {
-  //     throw new PlatformException(
-  //         code: "PERMISSION_DISABLED",
-  //         message: "Location data is not available on device",
-  //         details: null);
-  //   }
-  // }
 
   TextEditingController _textEditingController = new TextEditingController();
 
@@ -101,7 +71,12 @@ class _GetContactPageState extends State<GetContactPage> {
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          inputPhoneNumber();
+          if(Provider.of<TabStates>(context).selectedIndex == 0){ // 작성페이지
+            inputPhoneNumber();
+          } 
+          else if(Provider.of<TabStates>(context).selectedIndex == 2){
+            saveFriend();
+          }
           
         } ,
         label: Text('input New Number'),
@@ -144,14 +119,14 @@ class _GetContactPageState extends State<GetContactPage> {
                   onTap: () {
                     
                     getPhoneNumber(c);
-                    
-                    Navigator.pop(context, selectedPhoneNumber);
+                    getPhoneName(c);
+
+                    Navigator.pop(context, contactUserInfo);
                   },
                   leading: (c.avatar != null && c.avatar.length > 0)
                       ? CircleAvatar(backgroundImage: MemoryImage(c.avatar), backgroundColor: Colors.black, foregroundColor: Colors.white,)
                       : CircleAvatar(child: Text(c.initials(),), backgroundColor: Colors.black, foregroundColor: Colors.white,),
                   title: Text(c.displayName ?? ""),
-
                 );
               },
             )
@@ -159,18 +134,23 @@ class _GetContactPageState extends State<GetContactPage> {
           ),
         ),
       ],)
-      
-      
     );
   }
 
   inputPhoneNumber() async {
-    selectedPhoneNumber = await Navigator.push(context, MaterialPageRoute(builder: (context) => InputPhoneNumber()));
+    contactUserInfo = await Navigator.push(context, MaterialPageRoute(builder: (context) => InputPhoneNumber()));
     //selectedPhoneNumber = await Navigator.pushNamed(context, InputPhoneNumberRoute);
-    if(selectedPhoneNumber != null) Navigator.pop(context, selectedPhoneNumber);
+    if(contactUserInfo.phoneNumber != null && contactUserInfo.name != null) Navigator.pop(context, contactUserInfo);
+  }
+
+   saveFriend() async {
+    contactUserInfo = await Navigator.push(context, MaterialPageRoute(builder: (context) => SaveFriend()));
+    //selectedPhoneNumber = await Navigator.pushNamed(context, InputPhoneNumberRoute);
+    if(contactUserInfo.phoneNumber != null && contactUserInfo.name != null) Navigator.pop(context, contactUserInfo);
   }
 
   getPhoneNumber(Contact _c) async{
+    
     List<String> liPhoneNumber = _c.phones.map((i) => i.value).toList();
     for(String s in liPhoneNumber){
       if(s.substring(0, 3).contains('010') 
@@ -179,10 +159,14 @@ class _GetContactPageState extends State<GetContactPage> {
         || s.substring(0, 3).contains('017')
         || s.substring(0, 3).contains('019'))
       {
-        selectedPhoneNumber = s;
+        contactUserInfo.phoneNumber = s;
         return;
       }
     }
+  }
+
+  getPhoneName(Contact _c) async {
+    contactUserInfo.name = _c.displayName;
   }
 
   searchPhoneNumber(Contact _c) async{

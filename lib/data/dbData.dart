@@ -1,7 +1,7 @@
 class DBData{
   dynamic key;
-  String sender, receiver, savedPath, status, contents;
+  String senderPhoneNumber, senderName, receiverPhoneNumber, receiverName, savedPath, status, contents;
   bool isSelected = false;
 
-  DBData(this.key, this.sender, this.receiver, this.savedPath, this.status, this.contents);
+  DBData(this.key, this.senderPhoneNumber, this.senderName, this.receiverPhoneNumber, this.receiverName, this.savedPath, this.status, this.contents);
 }

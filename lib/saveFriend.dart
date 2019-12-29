@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:jtbcontract/data/contactUserInfo.dart';
 
-class InputPhoneNumber extends StatefulWidget {
+class SaveFriend extends StatefulWidget {
   @override
-  _InputPhoneNumberState createState() => _InputPhoneNumberState();
+  _SaveFriendState createState() => _SaveFriendState();
 }
 
-class _InputPhoneNumberState extends State<InputPhoneNumber> {
+class _SaveFriendState extends State<SaveFriend> {
 
   final myPhoneNumberController = TextEditingController();
   final myNameController = TextEditingController();
+  bool isCheckNumber = false;
 
   @override
   void dispose() {
@@ -18,7 +19,7 @@ class _InputPhoneNumberState extends State<InputPhoneNumber> {
     super.dispose();
   }
 
-  ContactUserInfo contactUserInfo;
+  ContactUserInfo contactUserInfo = new ContactUserInfo();
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +30,21 @@ class _InputPhoneNumberState extends State<InputPhoneNumber> {
         child: new Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            
+            SizedBox(
+              
+              child: Padding(
+                padding: EdgeInsets.all(10),
+                child: TextField(
+                  controller: myNameController,
+                  decoration: InputDecoration(
+                    enabledBorder: const OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.grey, width: 3.0)),
+                    border: OutlineInputBorder(),
+                    labelText: '등록할 이름',
+                  ),
+                ),
+              ), 
+            ),
             SizedBox(
               child: Padding(
                 padding: EdgeInsets.all(10),
@@ -63,12 +78,21 @@ class _InputPhoneNumberState extends State<InputPhoneNumber> {
                       flex: 1,
                       child: FlatButton.icon(
                       color: Colors.white,
-                      icon: Icon(Icons.send), //`Icon` to display
-                      label: Text('Send'), //`Text` to display
+                      icon: Icon(Icons.add), //`Icon` to display
+                      label: Text('Add'), //`Text` to display
                       onPressed: () {
-                        getPhoneNumber();
-                        getPhoneName();
-                        Navigator.pop(context, contactUserInfo);
+                        checkPhoneNumber();
+                        if(isCheckNumber == true){
+                          getPhoneNumber();
+                          getPhoneName();
+                          Navigator.pop(context, contactUserInfo);
+                        }
+                        else{
+                          SnackBar alertSnackbar = SnackBar(
+                            content: Text('번호를 잘못 입력하셨습니다.'),
+                          );
+                          Scaffold.of(context).showSnackBar(alertSnackbar);
+                        }
                       },
                     ),
                   ),
@@ -81,7 +105,24 @@ class _InputPhoneNumberState extends State<InputPhoneNumber> {
     );
   }
 
+  checkPhoneNumber(){
+    String _checkNumber = myPhoneNumberController.text.substring(0, 3);
+    if(_checkNumber.contains('010')  ||
+    _checkNumber.contains('011') ||
+    _checkNumber.contains('016') ||
+    _checkNumber.contains('017') ||
+    _checkNumber.contains('019')) {
+      isCheckNumber = true;
+    }
+    else{
+      isCheckNumber = false;
+      
+    }
+
+  }
+
   getPhoneNumber() {
+    
     contactUserInfo.phoneNumber = myPhoneNumberController.text;
   }
 
