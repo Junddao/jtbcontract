@@ -20,16 +20,17 @@ class _GetContactPageState extends State<GetContactPage> {
 
   @override
   void initState() {
-   
-    super.initState();
     refreshContacts();
     _textEditingController.addListener(textListener);
+    super.initState();
+    
   }
 
   @override
   void dispose(){
-    super.dispose();
     _textEditingController.dispose();
+    super.dispose();
+    
   }
 
 
@@ -112,9 +113,9 @@ class _GetContactPageState extends State<GetContactPage> {
           child: SafeArea(
             child: _contacts != null
                 ? ListView.builder(
-              itemCount: _contacts?.length ?? 0,
+              itemCount: _contacts.length ?? 0,
               itemBuilder: (BuildContext context, int index) {
-                Contact c = _contacts?.elementAt(index);
+                Contact c = _contacts.elementAt(index);
                 return ListTile(
                   onTap: () {
                     

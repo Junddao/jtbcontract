@@ -51,7 +51,7 @@ class _WritePageState extends State<WritePage> {
   int fileNum = 0;
   io.Directory appDocDirectory;
   var phoneNumber;
-  ContactUserInfo contactUserInfo;
+  ContactUserInfo contactUserInfo = new ContactUserInfo();
   String audioPath;
   List liRecFiles = new List();
 
@@ -60,6 +60,7 @@ class _WritePageState extends State<WritePage> {
   @override
   void dispose() {
     _playerCompleteSubscription?.cancel();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -173,7 +174,7 @@ class _WritePageState extends State<WritePage> {
     if(contactUserInfo.phoneNumber != null){
       Scaffold.of(context)
       ..removeCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text('$contactUserInfo.phoneNumber')));
+      ..showSnackBar(SnackBar(content: Text(contactUserInfo.name + '님께 요청 메세지를 발송했습니다.')));
       print(contactUserInfo.phoneNumber);
     }
   }
@@ -350,8 +351,8 @@ class _WritePageState extends State<WritePage> {
   }
 
   _navigateAndDisplaySelection(BuildContext context) async {
-    // phoneNumber = await Navigator.pushNamed(context, GetContactRoute);
-      contactUserInfo = await Navigator.push(context, MaterialPageRoute(builder: (context) => GetContactPage()));
+   
+    contactUserInfo = await Navigator.push(context, MaterialPageRoute(builder: (context) => GetContactPage()));
     if(contactUserInfo.phoneNumber != null)
     {
       contactUserInfo.phoneNumber = (contactUserInfo.phoneNumber as String).replaceAll('-', '');
@@ -404,7 +405,7 @@ class _WritePageState extends State<WritePage> {
               child: FlatButton(
                 textColor: Colors.black,
                 color: Colors.yellow,
-                child: Text('Kakao Talk'),
+                child: Text('JTB 등록친구'),
                 onPressed: () {
                   
                 },

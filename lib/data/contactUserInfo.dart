@@ -1,3 +1,5 @@
+import 'package:contacts_service/contacts_service.dart';
+
 class ContactUserInfo{
   var _phoneNumber;
 
@@ -15,5 +17,4 @@ class ContactUserInfo{
   }
 
   ContactUserInfo();
-  
 }

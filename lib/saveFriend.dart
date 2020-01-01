@@ -22,6 +22,11 @@ class _SaveFriendState extends State<SaveFriend> {
   ContactUserInfo contactUserInfo = new ContactUserInfo();
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return new Scaffold(
       backgroundColor: Colors.white,

@@ -109,7 +109,6 @@ class AfterSplash extends StatelessWidget {
       providers: [
         ChangeNotifierProvider<UserInfomation>( builder : (context) => UserInfomation(),),
         ChangeNotifierProvider<TabStates> (builder : (context) => TabStates(),),
-        // ChangeNotifierProvider<YoutubeInfo> (builder: (context) => YoutubeInfo(),),
       ] ,
       child: MaterialApp(
         home: RootPage(),

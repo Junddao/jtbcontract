@@ -42,6 +42,7 @@ dependencies:
   http :
   firebase_messaging : 
   cloud_firestore:
+  progress_dialog:
 
 dev_dependencies:
   flutter_test:

@@ -10,7 +10,6 @@ class UserInfomation with ChangeNotifier{
     _details = details;
     notifyListeners();
   }
-
 }
 
 class UserInfoDetails{

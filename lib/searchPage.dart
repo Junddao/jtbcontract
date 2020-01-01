@@ -12,10 +12,10 @@ import 'package:jtbcontract/data/approvalCondition.dart';
 import 'package:jtbcontract/data/dbData.dart';
 import 'package:jtbcontract/data/userinfo.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:progress_dialog/progress_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:io' as io;
-import 'package:firebase_messaging/firebase_messaging.dart';
 
 enum MyDialogAction{
       yes,
@@ -35,6 +35,8 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage>
     with SingleTickerProviderStateMixin {
 
+  ProgressDialog pr;
+
   // 재생완료 이벤트 구독
   StreamSubscription _playerCompleteSubscription;
   StreamSubscription _subscriptionStatus;
@@ -53,7 +55,10 @@ class _SearchPageState extends State<SearchPage>
   List<DBData> receivedData = [];
 
   List<DBData> friendAllData = [];
+  List<DBData> friendSentData = [];
   List<DBData> friendReceivedData = [];
+
+
   String myPhoneNumber;
 
   List<Contact> _contacts;
@@ -65,7 +70,7 @@ class _SearchPageState extends State<SearchPage>
 
   @override
   void initState() {
-    getDBData();
+    getMyDBData();
     ctr = new TabController(vsync: this, length: 2);
     
     FirebaseDatabase firebaseDatabase = FirebaseDatabase.instance;
@@ -80,17 +85,24 @@ class _SearchPageState extends State<SearchPage>
 
   Future<StreamSubscription<Event>> getStatusStream(DatabaseReference _itemRef, _updatedStatus) async{
     StreamSubscription<Event> _subscription;
-    _itemRef.once().then((DataSnapshot snap){
-      var keys = snap.value.keys;
-      for(var key in keys){
-        _subscription = _itemRef.child(key).child('status').onValue.listen((Event event){
-          String status = event.snapshot.value as String;
-          if(status == null) { 
-            status = '';
-          }
-        });
-      }
-    });
+
+    try{
+      await _itemRef.once().then((DataSnapshot snap){
+        var keys = snap.value.keys;
+        for(var key in keys){
+          _subscription = _itemRef.child(key).child('status').onValue.listen((Event event){
+            String status = event.snapshot.value as String;
+            if(status == null) { 
+              status = '';
+            }
+          });
+        }
+      });
+    }
+    catch(Exception){
+      print('getStatusStream error');
+    }
+    
 
     return _subscription;
   }
@@ -121,14 +133,14 @@ class _SearchPageState extends State<SearchPage>
     super.dispose();
   }
 
-  getDBData() async {
+  Future getMyDBData() async {
     DatabaseReference ref = FirebaseDatabase.instance.reference();
     myPhoneNumber =
         Provider.of<UserInfomation>(context, listen: false).details.phoneNumber;
     sentData.clear();
     receivedData.clear();
     try{
-      ref.child('Sender').child(myPhoneNumber).once().then((DataSnapshot snap) {
+      await ref.child('Sender').child(myPhoneNumber).once().then((DataSnapshot snap) {
         var keys = snap.value.keys;
         var data = snap.value;
         for (var key in keys) {
@@ -138,9 +150,13 @@ class _SearchPageState extends State<SearchPage>
             sentData.add(d);
           }
         }
-
       });
-      ref.child('Receiver').child(myPhoneNumber).once().then((DataSnapshot snap){
+    }
+    catch(Exception){
+      print('error');
+    }
+    try{
+      await ref.child('Receiver').child(myPhoneNumber).once().then((DataSnapshot snap){
         var keys = snap.value.keys;
         var data = snap.value;
         for (var key in keys) {
@@ -156,72 +172,107 @@ class _SearchPageState extends State<SearchPage>
         });
       });  
     }
+    catch(Exception)
+    {
+      print('error');
+    }
+  }
+
+  
+  Future getFriendDBData(String friendPhoneNumber) async{
+    DatabaseReference ref = FirebaseDatabase.instance.reference();
+    friendSentData.clear();
+    friendReceivedData.clear();
+    try{
+      await ref.child('Sender').child(friendPhoneNumber).once().then((DataSnapshot snap) {
+        var keys = snap.value.keys;
+        var data = snap.value;
+        for (var key in keys) {
+          DBData d = new DBData(key, data[key]['senderPhoneNumber'], data[key]['senderName'], data[key]['receiverPhoneNumber'], data[key]['receiverName'],
+              data[key]['savedPath'], data[key]['status'], data[key]['contents']);
+          if (d.senderPhoneNumber == friendPhoneNumber) {
+            friendSentData.add(d);
+          }
+        }
+
+      });
+    }
     catch(Exception){
       print('error');
     }
+    try{
+      await ref.child('Receiver').child(friendPhoneNumber).once().then((DataSnapshot snap){
+        var keys = snap.value.keys;
+        var data = snap.value;
+        for (var key in keys) {
+          DBData d = new DBData(key, data[key]['senderPhoneNumber'], data[key]['senderName'], data[key]['receiverPhoneNumber'], data[key]['receiverName'],
+              data[key]['savedPath'], data[key]['status'], data[key]['contents']);
+          if (d.receiverPhoneNumber == friendPhoneNumber) {
+            friendReceivedData.add(d);
+          }
+        }
+        setState(() {
+          print('length : ${friendSentData.length}');
+          print('length : ${friendReceivedData.length}');
+        });
+      });  
+    }
+    catch(Exception)
+    {
+      print('error');
+    }
+  }
+
+  Future setStatusOfDBData(MyDialogAction myDialogAction, DBData dbData) async {
+    await setStatusOfMyDBData(myDialogAction, dbData);
+    await setStatusOfFriendsDBData(myDialogAction, dbData);
+    setState(() {
+      getMyDBData();
+    });
+  }
+  
+  Future setStatusOfMyDBData(MyDialogAction myDialogAction, DBData dbData) async{
+    DatabaseReference ref = FirebaseDatabase.instance.reference();
+
+    try{
+      if(myDialogAction == MyDialogAction.yes){
+        await ref.child('Receiver').child(myPhoneNumber).child(dbData.key).update({'status' : '승인'});
+      }
+      else
+        await ref.child('Receiver').child(myPhoneNumber).child(dbData.key).update({'status' : '거절'});
+      
+    }
+    catch(Exception){
+      print('update error');
+    }
     
   }
 
-  setStatusOfDBData(MyDialogAction myDialogAction, DBData dbData) async {
-    setStatusOfMyDBData(myDialogAction, dbData);
-    setStatusOfFriendsDBData(myDialogAction, dbData);
-  }
-  
-  setStatusOfMyDBData(MyDialogAction myDialogAction, DBData dbData) async{
-    DatabaseReference ref = FirebaseDatabase.instance.reference();
+  Future setStatusOfFriendsDBData(MyDialogAction myDialogAction, DBData dbData) async{
 
-    if(myDialogAction == MyDialogAction.yes){
-      ref.child('Sender').child(myPhoneNumber).child(dbData.key).child('status').set('승인');
-    }
-    else
-      ref.child('Sender').child(myPhoneNumber).child(dbData.key).child('status').set('거절');
-    setState(() { });
-  }
+    try{
+      String modifyKey;
+      for(DBData db in friendSentData){
+        if(db.savedPath == dbData.savedPath){
+          modifyKey = db.key;
+        }
+      }
 
-  setStatusOfFriendsDBData(MyDialogAction myDialogAction, DBData dbData) async{
-    String modifyKey;
-    for(DBData db in friendReceivedData){
-      if(db.savedPath == dbData.savedPath){
-        modifyKey = db.key;
+      DatabaseReference ref = FirebaseDatabase.instance.reference();
+      if(myDialogAction == MyDialogAction.yes){
+        await ref.child('Sender').child(dbData.senderPhoneNumber).child(modifyKey).update({'status' : '승인'});
+      }
+      else{
+        await ref.child('Sender').child(dbData.senderPhoneNumber).child(modifyKey).update({'status' : '거절'});
       }
     }
-
-    DatabaseReference ref = FirebaseDatabase.instance.reference();
-    if(myDialogAction == MyDialogAction.yes){
-      ref.child('Receiver').child(dbData.receiverPhoneNumber).child(modifyKey).child('status').set('승인');
+    catch(Exception){
+      print('update error');
     }
-    else{
-      ref.child('Receiver').child(dbData.receiverPhoneNumber).child(modifyKey).child('status').set('거절');
-    }
-
-    setState(() {
-      getDBData();
-    });
+    
    
   }
 
-  getFriendDBData(String friendPhoneNumber) async{
-    DatabaseReference ref = FirebaseDatabase.instance.reference();
-    
-    await ref.child('Receiver').child(friendPhoneNumber).once().then((DataSnapshot snap) {
-      var keys = snap.value.keys;
-      var data = snap.value;
-      friendAllData.clear();
-      friendReceivedData.clear();
-      for (var key in keys) {
-        DBData d = new DBData(key, data[key]['senderPhoneNumber'], data[key]['senderName'], data[key]['receiverPhoneNumber'], data[key]['receiverName'],
-            data[key]['savedPath'], data[key]['status'], data[key]['contents']);
-        friendAllData.add(d);
-        
-        if (d.receiverPhoneNumber == friendPhoneNumber) {
-          friendReceivedData.add(d);
-        }
-      }
-      setState(() {
-        print('length : ${allData.length}');
-      });
-    });
-  }
 
   deleteDBData(int index) async{
     String removeKey = sentData[index].key;
@@ -239,7 +290,7 @@ class _SearchPageState extends State<SearchPage>
     {
       print('delete $removeKey');
       setState(() {
-        getDBData();
+        getMyDBData();
       });
     });
     
@@ -259,7 +310,7 @@ class _SearchPageState extends State<SearchPage>
     {
       print('delete $removeKey');
       setState(() {
-        getDBData();
+        getMyDBData();
       });
     });
   }
@@ -312,7 +363,7 @@ class _SearchPageState extends State<SearchPage>
     return new Container(
       padding: EdgeInsets.all(20.0),
       child: receivedData.length == 0
-        ? new Text('no Data is Available')
+        ? displayedPage(false)
         : new ListView.builder(
             itemCount: receivedData.length,
             itemBuilder: (_, index) {
@@ -337,7 +388,7 @@ class _SearchPageState extends State<SearchPage>
     return new Container(
       padding: EdgeInsets.all(20.0),
       child: sentData.length == 0
-        ? new Text('no Data is Available')
+        ? displayedPage(false)
         : new ListView.builder(
             itemCount: sentData.length,
             itemBuilder: (_, index) {
@@ -356,7 +407,39 @@ class _SearchPageState extends State<SearchPage>
     );
   }
 
-  Future _downloadFile(DBData dbData) async {
+  Container displayedPage(bool hasFile){
+    if(hasFile == false) {
+      return Container(
+        width: MediaQuery.of(context).size.width,
+        height: MediaQuery.of(context).size.height,
+
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            Text('비었음!'),
+
+          ],
+        ),
+      );
+    }
+    
+  }
+
+  displayProgressBar(BuildContext context, DBData dbData) async{
+    pr = new ProgressDialog(context);
+    pr.style(message: 'Please wait...');
+  
+    pr.show();    
+    _downloadFile(context, dbData).then((onValue) {
+      pr.hide();
+    });
+    
+  }
+
+  Future _downloadFile(BuildContext context, DBData dbData) async {
+
+   
     StorageReference firebaseStorageRef =
         FirebaseStorage.instance.ref().child(dbData.savedPath);
             
@@ -378,15 +461,7 @@ class _SearchPageState extends State<SearchPage>
       'Success!\nDownloaded $name \nUrl: $url'
       '\npath: $path \nBytes Count :: $byteCount',
     );
-    _scaffoldKey.currentState.showSnackBar(
-      SnackBar(
-        backgroundColor: Colors.white,
-        content: Image.memory(
-          bodyBytes,
-          fit: BoxFit.fill,
-        ),
-      ),
-    );
+
     _isPlaying == false ? _playRec() : _stopPlayRec();
 
     //StorageTaskSnapshot taskSnapshot = await uploadTask.onComplete;
@@ -445,34 +520,42 @@ class _SearchPageState extends State<SearchPage>
     } catch (Exception) {}
   }
 
-
-  void showAlert(DBData dbData){
-    AlertDialog dialog = new AlertDialog(
-      content: new Text('Yes or Not', style: new TextStyle(fontSize: 30.0),),
-      actions: <Widget>[
-        new FlatButton(
-          onPressed: (){
-            _dialogResult(MyDialogAction.yes, dbData);
-          }, 
-          child: Text('Yes'),
-        ),
-        new FlatButton(
-          onPressed: (){
-            _dialogResult(MyDialogAction.no, dbData);
-          }, 
-          child: Text('No'),
-        )
-      ],
+  _createAlertDialog(BuildContext context, DBData dbData) async{
+    await showAlert(context, dbData);
+ 
+  }
+  
+  Future<void> showAlert(BuildContext context, DBData dbData) async{
+    showDialog(
+      context: context,
+      builder: (context){
+        return AlertDialog(
+          content: new Text('Yes or Not', style: new TextStyle(fontSize: 30.0),),
+          actions: <Widget>[
+            new FlatButton(
+              onPressed: (){
+                _dialogResult(context, MyDialogAction.yes, dbData);
+                
+              }, 
+              child: Text('Yes'),
+            ),
+            new FlatButton(
+              onPressed: (){
+                _dialogResult(context, MyDialogAction.no, dbData);
+                
+              }, 
+              child: Text('No'),
+            )
+          ],
+        );
+      }
     );
-
-    showDialog(context: context, child: dialog);
-      
   }
 
-  _dialogResult(MyDialogAction value, DBData dbData){
-
-      setStatusOfDBData(value, dbData);
-      Navigator.pop(context);
+  _dialogResult (BuildContext context, MyDialogAction value, DBData dbData) async {
+    
+    await setStatusOfDBData(value, dbData);
+    Navigator.of(context).pop(true);
     
   }
 
@@ -523,13 +606,13 @@ class _SearchPageState extends State<SearchPage>
               Expanded(
                 flex: 1,
                 child: new Container(
-                  child: IconButton(
-                    icon: selectPlayIcon(index), 
+                  child: sentData.isNotEmpty ? IconButton(
+                    icon: sentDataSelectPlayIcon(index), 
                     onPressed: (){
                       sentData[index].isSelected = true;
-                      _downloadFile(dbData);
+                      displayProgressBar(context, dbData);
                     },
-                  ),
+                  ): null,
                 ),
               ),
               Expanded(
@@ -567,11 +650,9 @@ class _SearchPageState extends State<SearchPage>
     }
 
    return GestureDetector(
-      onTap: (){
-        showAlert(dbData);
-        setState(() {
-          
-      });
+      onTap: () async {
+        await getFriendDBData(dbData.senderPhoneNumber);
+        _createAlertDialog(context, dbData);
       },
       child: Card(
       shape: RoundedRectangleBorder(
@@ -608,13 +689,13 @@ class _SearchPageState extends State<SearchPage>
               Expanded(
                 flex: 1,
                 child: new Container(
-                  child: IconButton(
-                    icon: selectPlayIcon(index), 
+                  child: receivedData.isNotEmpty ? IconButton(
+                    icon: receivedDataSelectPlayIcon(index), 
                     onPressed: (){
-                      sentData[index].isSelected = true;
-                      _downloadFile(dbData);
+                      receivedData[index].isSelected = true;
+                      displayProgressBar(context, dbData);
                     },
-                  ),
+                  ) : null,
                 ),
               ),
               
@@ -625,10 +706,9 @@ class _SearchPageState extends State<SearchPage>
     );
   }
 
-  Icon selectPlayIcon(int index)
+  Icon sentDataSelectPlayIcon(int index)
   {
-    if(sentData[index].isSelected)
-    {
+    if(sentData[index].isSelected){
       if(_isPlaying == false){
         return Icon(Icons.play_arrow);
       }
@@ -639,10 +719,24 @@ class _SearchPageState extends State<SearchPage>
     }
     else{
       return Icon(Icons.play_arrow);
-    } 
+    }
   }
 
-  
+  Icon receivedDataSelectPlayIcon(int index)
+  {
+    if(receivedData[index].isSelected){
+      if(_isPlaying == false){
+        return Icon(Icons.play_arrow);
+      }
+      else{
+        receivedData[index].isSelected = false;
+        return Icon(Icons.stop);
+      }
+    }
+    else{
+      return Icon(Icons.play_arrow);
+    }
+  }
 
   // change play status after play audio.
   void _onComplete() {
