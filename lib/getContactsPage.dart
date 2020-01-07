@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:contacts_service/contacts_service.dart';
 import 'package:jtbcontract/data/contactUserInfo.dart';
-import 'package:jtbcontract/data/tabstates.dart';
 import 'package:jtbcontract/inputPhoneNumber.dart';
 import 'package:jtbcontract/saveFriend.dart';
 import 'package:jtbcontract/service/soundSearcher.dart';
-import 'package:provider/provider.dart';
 
 
 class GetContactPage extends StatefulWidget {
+
+  final int selectedIndex;
+  const GetContactPage({Key key, this.selectedIndex}) : super(key: key);
+
   @override
   _GetContactPageState createState() => _GetContactPageState();
 }
@@ -72,10 +74,10 @@ class _GetContactPageState extends State<GetContactPage> {
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          if(Provider.of<TabStates>(context).selectedIndex == 0){ // 작성페이지
+          if(widget.selectedIndex == 0){ // 작성페이지
             inputPhoneNumber();
           } 
-          else if(Provider.of<TabStates>(context).selectedIndex == 2){
+          else if(widget.selectedIndex == 2){
             saveFriend();
           }
           
@@ -139,9 +141,16 @@ class _GetContactPageState extends State<GetContactPage> {
   }
 
   inputPhoneNumber() async {
-    contactUserInfo = await Navigator.push(context, MaterialPageRoute(builder: (context) => InputPhoneNumber()));
-    //selectedPhoneNumber = await Navigator.pushNamed(context, InputPhoneNumberRoute);
-    if(contactUserInfo.phoneNumber != null && contactUserInfo.name != null) Navigator.pop(context, contactUserInfo);
+    try{
+      contactUserInfo = await Navigator.push(context, MaterialPageRoute(builder: (context) => InputPhoneNumber()));
+      //selectedPhoneNumber = await Navigator.pushNamed(context, InputPhoneNumberRoute);
+      if(contactUserInfo.phoneNumber != null && contactUserInfo.name != null) Navigator.pop(context, contactUserInfo);
+    }
+    catch(Exception)
+    {
+      print('phoneNumber is null');
+    }
+   
   }
 
    saveFriend() async {

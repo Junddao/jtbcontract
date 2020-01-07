@@ -21,7 +21,11 @@ class _TabPageState extends State<TabPage> {
     AccountPage()
   ];
 
-
+  @override
+  void initState() {
+    
+    super.initState();
+  }
 
 
   @override
@@ -95,6 +99,7 @@ class _TabPageState extends State<TabPage> {
     if(Provider.of<TabStates>(context).selectedIndex == 1) titleText = '찾기';
     if(Provider.of<TabStates>(context).selectedIndex == 2) titleText = '친구';
     if(Provider.of<TabStates>(context).selectedIndex == 3) titleText = '내계정';
+    
     return Text(
       titleText,
       style: TextStyle(color: Colors.white),

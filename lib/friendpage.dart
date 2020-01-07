@@ -6,6 +6,7 @@ import 'package:jtbcontract/data/dbData.dart';
 import 'package:jtbcontract/data/userinfo.dart';
 import 'package:jtbcontract/getContactsPage.dart';
 import 'package:provider/provider.dart';
+import 'package:synchronized/synchronized.dart';
 
 class FreindPage extends StatefulWidget {
   @override
@@ -17,11 +18,12 @@ class _FreindPageState extends State<FreindPage> {
   ContactUserInfo contactUserInfo = new ContactUserInfo();
   List<DBContacts> liContactUserInfo = [];
   var myPhoneNumber;
+  var lock = Lock();
 
   createDatabase() async {
     DatabaseReference ref = FirebaseDatabase.instance.reference();
     try{
-      await ref.child(myPhoneNumber).child('Contact').push().set({
+      await ref.child('Contact').child(myPhoneNumber).push().set({
         'name' : contactUserInfo.name,
         'phoneNumber' : contactUserInfo.phoneNumber
       });
@@ -32,7 +34,7 @@ class _FreindPageState extends State<FreindPage> {
       Scaffold.of(context).showSnackBar(alertSnackbar);
       
       setState(() { 
-        getDBData();
+        lock.synchronized(getDBData);
       });
     }
     catch(Exception){
@@ -43,11 +45,11 @@ class _FreindPageState extends State<FreindPage> {
   deleteDatabase(int index) async{
     DatabaseReference ref = FirebaseDatabase.instance.reference();
     String removeKey = liContactUserInfo[index].key;
-    await ref.child(myPhoneNumber).child('Contact').child(removeKey).remove().then((_)
+    await ref.child('Contact').child(myPhoneNumber).child(removeKey).remove().then((_)
     {
       print('delete $removeKey');
       setState(() {
-        getDBData();
+        lock.synchronized(getDBData);
       });
     });
   }
@@ -56,7 +58,7 @@ class _FreindPageState extends State<FreindPage> {
     DatabaseReference ref = FirebaseDatabase.instance.reference();
     liContactUserInfo.clear();
     try{
-      await ref.child(myPhoneNumber).child('Contact').once().then((DataSnapshot snap) {
+      await ref.child('Contact').child(myPhoneNumber).once().then((DataSnapshot snap) {
         var keys = snap.value.keys;
         var data = snap.value;
         for (var key in keys) {
@@ -78,7 +80,7 @@ class _FreindPageState extends State<FreindPage> {
   void initState() {
     myPhoneNumber =
         Provider.of<UserInfomation>(context, listen: false).details.phoneNumber;
-    getDBData();
+    lock.synchronized(getDBData);
     super.initState();
   }
 
@@ -89,7 +91,7 @@ class _FreindPageState extends State<FreindPage> {
         onPressed: () {
           _navigateAndDisplaySelection(context);
           setState(() {
-            getDBData();
+            lock.synchronized(getDBData);
           });
           
         },
@@ -120,13 +122,19 @@ class _FreindPageState extends State<FreindPage> {
   }
 
   _navigateAndDisplaySelection(BuildContext context) async {
-    // phoneNumber = await Navigator.pushNamed(context, GetContactRoute);
-    contactUserInfo = await Navigator.push(context, MaterialPageRoute(builder: (context) => GetContactPage()));
-    if(contactUserInfo.phoneNumber != null){
-      contactUserInfo.phoneNumber = (contactUserInfo.phoneNumber as String).replaceAll('-', '');
+    try{
+      int pageNumber = 2;
+      contactUserInfo = await Navigator.push(context, MaterialPageRoute(builder: (context) => GetContactPage(selectedIndex: pageNumber,)));
+      if(contactUserInfo.phoneNumber != null){
+        contactUserInfo.phoneNumber = (contactUserInfo.phoneNumber as String).replaceAll('-', '');
+      }
+
+      await checkOverlap();
+    }
+    catch(Exception){
+      print('get Contact Error');
     }
 
-    await checkOverlap();
     
   } 
 

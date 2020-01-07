@@ -1,4 +1,3 @@
-import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:jtbcontract/data/tabstates.dart';
@@ -8,12 +7,9 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:splashscreen/splashscreen.dart';
 
-import 'service/router.dart';
-
 void main(){
   runApp(
     new MaterialApp(
-        
       home : MyApp(),
       //onGenerateRoute: generateRoute,
       //initialRoute: RootPageRoute,
@@ -30,6 +26,7 @@ class _MyAppState extends State<MyApp>{
 
   String textValue = 'Hello World';
   FirebaseMessaging firebaseMessaging = new FirebaseMessaging();
+  
 
   @override
   void initState() {
@@ -102,6 +99,7 @@ class _MyAppState extends State<MyApp>{
 }
 
 class AfterSplash extends StatelessWidget {
+
   @override
   Widget build(BuildContext context) {
     permission();

@@ -17,6 +17,8 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:io' as io;
 
+import 'package:synchronized/synchronized.dart';
+
 enum MyDialogAction{
       yes,
       no,
@@ -61,24 +63,26 @@ class _SearchPageState extends State<SearchPage>
 
   String myPhoneNumber;
 
-  List<Contact> _contacts;
   var contacts;
   String selectedPhoneNumber;
 
   TabController ctr;
 
+  var lock = new Lock();
+  
+
 
   @override
   void initState() {
-    getMyDBData();
+    lock.synchronized(getMyDBData);
     ctr = new TabController(vsync: this, length: 2);
     
     FirebaseDatabase firebaseDatabase = FirebaseDatabase.instance;
-    DatabaseReference itemRef = firebaseDatabase.reference().child('Sender').child(myPhoneNumber);
-    itemRef.onChildChanged.listen(_onEntryChanged);
-    itemRef.onChildAdded.listen(_onEntryAdded);
+    DatabaseReference itemSenderRef = firebaseDatabase.reference().child('Sender').child(myPhoneNumber);
+    itemSenderRef.onChildChanged.listen(_onEntryChanged);
+    itemSenderRef.onChildAdded.listen(_onEntryAdded);
 
-    getStatusStream(itemRef, _updatedStatus).then((StreamSubscription s) => _subscriptionStatus = s);
+    getStatusStream(itemSenderRef, _updatedStatus).then((StreamSubscription s) => _subscriptionStatus = s);
 
     super.initState();
   }
@@ -98,6 +102,9 @@ class _SearchPageState extends State<SearchPage>
           });
         }
       });
+      setState(() {
+        lock.synchronized(getMyDBData);
+      });
     }
     catch(Exception){
       print('getStatusStream error');
@@ -115,13 +122,13 @@ class _SearchPageState extends State<SearchPage>
 
   _onEntryChanged(Event event){
     setState(() {
-      
+      lock.synchronized(getMyDBData);
     });
   }
 
   _onEntryAdded(Event event){
     setState(() {
-      
+      lock.synchronized(getMyDBData);
     });
   }
 
@@ -144,7 +151,7 @@ class _SearchPageState extends State<SearchPage>
         var keys = snap.value.keys;
         var data = snap.value;
         for (var key in keys) {
-          DBData d = new DBData(key, data[key]['senderPhoneNumber'], data[key]['senderName'], data[key]['receiverPhoneNumber'], data[key]['receiverName'],
+          DBData d = new DBData(key, data[key]['date'], data[key]['senderPhoneNumber'], data[key]['senderName'], data[key]['receiverPhoneNumber'], data[key]['receiverName'],
               data[key]['savedPath'], data[key]['status'], data[key]['contents']);
           if (d.senderPhoneNumber == myPhoneNumber) {
             sentData.add(d);
@@ -160,7 +167,7 @@ class _SearchPageState extends State<SearchPage>
         var keys = snap.value.keys;
         var data = snap.value;
         for (var key in keys) {
-          DBData d = new DBData(key, data[key]['senderPhoneNumber'], data[key]['senderName'], data[key]['receiverPhoneNumber'], data[key]['receiverName'],
+          DBData d = new DBData(key, data[key]['date'], data[key]['senderPhoneNumber'], data[key]['senderName'], data[key]['receiverPhoneNumber'], data[key]['receiverName'],
               data[key]['savedPath'], data[key]['status'], data[key]['contents']);
           if (d.receiverPhoneNumber == myPhoneNumber) {
             receivedData.add(d);
@@ -188,7 +195,7 @@ class _SearchPageState extends State<SearchPage>
         var keys = snap.value.keys;
         var data = snap.value;
         for (var key in keys) {
-          DBData d = new DBData(key, data[key]['senderPhoneNumber'], data[key]['senderName'], data[key]['receiverPhoneNumber'], data[key]['receiverName'],
+          DBData d = new DBData(key, data[key]['date'], data[key]['senderPhoneNumber'], data[key]['senderName'], data[key]['receiverPhoneNumber'], data[key]['receiverName'],
               data[key]['savedPath'], data[key]['status'], data[key]['contents']);
           if (d.senderPhoneNumber == friendPhoneNumber) {
             friendSentData.add(d);
@@ -205,7 +212,7 @@ class _SearchPageState extends State<SearchPage>
         var keys = snap.value.keys;
         var data = snap.value;
         for (var key in keys) {
-          DBData d = new DBData(key, data[key]['senderPhoneNumber'], data[key]['senderName'], data[key]['receiverPhoneNumber'], data[key]['receiverName'],
+          DBData d = new DBData(key, data[key]['date'], data[key]['senderPhoneNumber'], data[key]['senderName'], data[key]['receiverPhoneNumber'], data[key]['receiverName'],
               data[key]['savedPath'], data[key]['status'], data[key]['contents']);
           if (d.receiverPhoneNumber == friendPhoneNumber) {
             friendReceivedData.add(d);
@@ -227,7 +234,7 @@ class _SearchPageState extends State<SearchPage>
     await setStatusOfMyDBData(myDialogAction, dbData);
     await setStatusOfFriendsDBData(myDialogAction, dbData);
     setState(() {
-      getMyDBData();
+      lock.synchronized(getMyDBData);
     });
   }
   
@@ -290,7 +297,7 @@ class _SearchPageState extends State<SearchPage>
     {
       print('delete $removeKey');
       setState(() {
-        getMyDBData();
+        lock.synchronized(getMyDBData);
       });
     });
     
@@ -310,7 +317,7 @@ class _SearchPageState extends State<SearchPage>
     {
       print('delete $removeKey');
       setState(() {
-        getMyDBData();
+        lock.synchronized(getMyDBData);
       });
     });
   }
@@ -338,11 +345,11 @@ class _SearchPageState extends State<SearchPage>
             tabs: <Tab>[
               new Tab(
                 icon: Icon(Icons.receipt),
-                text: 'received',
+                text: '받은파일',
               ),
               new Tab(
                 icon: Icon(Icons.send),
-                text: 'sent',
+                text: '보낸파일',
               ),
             ],
           ),
@@ -368,6 +375,7 @@ class _SearchPageState extends State<SearchPage>
             itemCount: receivedData.length,
             itemBuilder: (_, index) {
               DBData dbData = new DBData(receivedData[index].key,
+                receivedData[index].date,
                 receivedData[index].senderPhoneNumber,
                 receivedData[index].senderName,
                 receivedData[index].receiverPhoneNumber,
@@ -393,6 +401,7 @@ class _SearchPageState extends State<SearchPage>
             itemCount: sentData.length,
             itemBuilder: (_, index) {
               DBData dbData = new DBData(sentData[index].key,
+                sentData[index].date,
                 sentData[index].senderPhoneNumber,
                 sentData[index].senderName,
                 sentData[index].receiverPhoneNumber,
@@ -521,8 +530,28 @@ class _SearchPageState extends State<SearchPage>
   }
 
   _createAlertDialog(BuildContext context, DBData dbData) async{
-    await showAlert(context, dbData);
- 
+    if(dbData.status == ApprovalCondition.ready){
+      await showAlert(context, dbData);
+    }
+    else
+    {
+      showDialog(
+        context: context,
+        builder: (context){
+          return AlertDialog(
+            content: new Text('이미 결정한 파일입니다. 상대방에게 삭제 요청을 하세요.'),
+            actions: <Widget>[
+              new FlatButton(
+                onPressed : () { 
+                  Navigator.of(context).pop(true);
+                },
+                child: Text('ok'),
+              )
+            ],
+          );
+        }
+      );
+    }
   }
   
   Future<void> showAlert(BuildContext context, DBData dbData) async{
@@ -568,10 +597,10 @@ class _SearchPageState extends State<SearchPage>
       backColor = Colors.grey;
     }
     if (dbData.status == ApprovalCondition.approval) {
-      backColor = Colors.blue[300];
+      backColor = Colors.blue;
     }
     if (dbData.status == ApprovalCondition.reject) {
-      backColor = Colors.red[300];
+      backColor = Colors.red;
     }
 
     return Card(
@@ -595,11 +624,23 @@ class _SearchPageState extends State<SearchPage>
               Expanded(
                 flex: 3,
                 child: new Container(
-                  child: new Column(
-                    children: <Widget>[
-                      new Text('Sender : ' + dbData.senderName + '(' + dbData.senderPhoneNumber + ')',),
-                      new Text('Receiver : ' + dbData.receiverName + '('  + dbData.receiverPhoneNumber+ ')'),
-                    ],
+                  child:Padding(
+                    padding: EdgeInsets.only(left: 20),
+                    child: new Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        // new Text('보낸사람 : '),
+                        // new Text(dbData.senderName, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),),
+                        // new Text(dbData.senderPhoneNumber + '\n', style: TextStyle(color: Colors.grey),),
+
+                        //new Text('받는사람 : ',  style: TextStyle(color: Colors.grey),),
+                        new Text(dbData.receiverName, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),),
+                        new Text(dbData.receiverPhoneNumber + '\n',),
+
+                        //new Text('생성일 : '),
+                        new Text(dbData.date.toString(), style: TextStyle(color: Colors.grey),)
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -643,10 +684,10 @@ class _SearchPageState extends State<SearchPage>
       backColor = Colors.grey;
     }
     if (dbData.status == ApprovalCondition.approval) {
-      backColor = Colors.blue[300];
+      backColor = Colors.blue;
     }
     if (dbData.status == ApprovalCondition.reject) {
-      backColor = Colors.red[300];
+      backColor = Colors.red;
     }
 
    return GestureDetector(
@@ -675,15 +716,30 @@ class _SearchPageState extends State<SearchPage>
               Expanded(
                 flex: 3,
                 child: new Container(
-                  child: new Column(
-                    children: <Widget>[
-                      new Text('Sender : ' + dbData.senderName + '(' + dbData.senderPhoneNumber + ')',),
-                      new Text('Receiver : ' + dbData.receiverName + '('  + dbData.receiverPhoneNumber+ ')'),
-                      //new Text('savedPath : $_savedPath'),
-                      //new Text('status : $_status'),
-                      //new Text('Sender : $_contents'),
-                    ],
-                  ),
+                  child : new Padding(
+                    padding: EdgeInsets.all(3),
+                    child: new Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        new Text('보낸사람 : ', style:  TextStyle(color: Colors.grey)),
+                        new Text(dbData.senderName, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),),
+                        new Text(dbData.senderPhoneNumber + '\n', ),
+                       
+
+                        // new Text('받는사람 : '),
+                        // new Text(dbData.receiverName, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),),
+                        // new Text(dbData.receiverPhoneNumber + '\n', style: TextStyle(color: Colors.grey),),
+
+                        new Text('생성일 : '),
+                        new Text(dbData.date.toString(), style: TextStyle(color: Colors.grey),)
+                        
+                        //new Text('savedPath : $_savedPath'),
+                        //new Text('status : $_status'),
+                        //new Text('Sender : $_contents'),
+                      ],
+                    ),
+                  )
+                  
                 ),
               ),
               Expanded(

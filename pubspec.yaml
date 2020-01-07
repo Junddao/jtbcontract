@@ -14,7 +14,7 @@ description: A new Flutter project.
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.1.0 <3.0.0"
+  sdk: ">=2.2.0 <3.0.0"
 
 dependencies:
   flutter:
@@ -43,6 +43,7 @@ dependencies:
   firebase_messaging : 
   cloud_firestore:
   progress_dialog:
+  synchronized :
 
 dev_dependencies:
   flutter_test:
@@ -68,6 +69,7 @@ flutter:
   #  - images/a_dot_ham.jpeg
   assets:
     - images/loginImage.jpg
+    - images/loginImage.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
