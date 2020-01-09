@@ -19,32 +19,31 @@ import 'dart:io' as io;
 
 import 'package:synchronized/synchronized.dart';
 
-enum MyDialogAction{
-      yes,
-      no,
+enum MyDialogAction {
+  yes,
+  no,
+  wait,
 }
 
 class SearchPage extends StatefulWidget {
-
   final LocalFileSystem localFileSystem;
   SearchPage({localFileSystem})
       : this.localFileSystem = localFileSystem ?? LocalFileSystem();
-    
+
   @override
   _SearchPageState createState() => _SearchPageState();
 }
 
 class _SearchPageState extends State<SearchPage>
     with SingleTickerProviderStateMixin {
-
   ProgressDialog pr;
 
   // 재생완료 이벤트 구독
   StreamSubscription _playerCompleteSubscription;
   StreamSubscription _subscriptionStatus;
- 
+
   GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
-  
+
   // 다운받은 파일 재생용 변수
   io.Directory appDocDirectory;
   File tempFile;
@@ -60,7 +59,6 @@ class _SearchPageState extends State<SearchPage>
   List<DBData> friendSentData = [];
   List<DBData> friendReceivedData = [];
 
-
   String myPhoneNumber;
 
   var contacts;
@@ -69,47 +67,51 @@ class _SearchPageState extends State<SearchPage>
   TabController ctr;
 
   var lock = new Lock();
-  
-
 
   @override
   void initState() {
-    lock.synchronized(getMyDBData);
+    myPhoneNumber =
+        Provider.of<UserInfomation>(context, listen: false).details.phoneNumber;
+    lock.synchronized(getMySentDBData);
+    lock.synchronized(getMyReceivedDBData);
     ctr = new TabController(vsync: this, length: 2);
-    
+
     FirebaseDatabase firebaseDatabase = FirebaseDatabase.instance;
-    DatabaseReference itemSenderRef = firebaseDatabase.reference().child('Sender').child(myPhoneNumber);
+    DatabaseReference itemSenderRef =
+        firebaseDatabase.reference().child('Sender').child(myPhoneNumber);
     itemSenderRef.onChildChanged.listen(_onEntryChanged);
     itemSenderRef.onChildAdded.listen(_onEntryAdded);
 
-    getStatusStream(itemSenderRef, _updatedStatus).then((StreamSubscription s) => _subscriptionStatus = s);
+    getStatusStream(itemSenderRef, _updatedStatus)
+        .then((StreamSubscription s) => _subscriptionStatus = s);
 
     super.initState();
   }
 
-  Future<StreamSubscription<Event>> getStatusStream(DatabaseReference _itemRef, _updatedStatus) async{
+  Future<StreamSubscription<Event>> getStatusStream(
+      DatabaseReference _itemRef, _updatedStatus) async {
     StreamSubscription<Event> _subscription;
 
-    try{
-      await _itemRef.once().then((DataSnapshot snap){
+    try {
+      await _itemRef.once().then((DataSnapshot snap) {
         var keys = snap.value.keys;
-        for(var key in keys){
-          _subscription = _itemRef.child(key).child('status').onValue.listen((Event event){
+        for (var key in keys) {
+          _subscription =
+              _itemRef.child(key).child('status').onValue.listen((Event event) {
             String status = event.snapshot.value as String;
-            if(status == null) { 
+            if (status == null) {
               status = '';
             }
           });
         }
       });
       setState(() {
-        lock.synchronized(getMyDBData);
+        lock.synchronized(getMySentDBData);
+        lock.synchronized(getMyReceivedDBData);
       });
-    }
-    catch(Exception){
+    } catch (Exception) {
       print('getStatusStream error');
     }
-    
 
     return _subscription;
   }
@@ -120,19 +122,20 @@ class _SearchPageState extends State<SearchPage>
     });
   }
 
-  _onEntryChanged(Event event){
+  _onEntryChanged(Event event) {
     setState(() {
-      lock.synchronized(getMyDBData);
+        lock.synchronized(getMySentDBData);
+        lock.synchronized(getMyReceivedDBData);
     });
   }
 
-  _onEntryAdded(Event event){
+  _onEntryAdded(Event event) {
     setState(() {
-      lock.synchronized(getMyDBData);
+        lock.synchronized(getMySentDBData);
+        lock.synchronized(getMyReceivedDBData);
     });
   }
 
-  @override
   @override
   void dispose() {
     ctr.dispose();
@@ -140,35 +143,66 @@ class _SearchPageState extends State<SearchPage>
     super.dispose();
   }
 
-  Future getMyDBData() async {
+  Future<List<DBData>> getMySentDBData() async {
     DatabaseReference ref = FirebaseDatabase.instance.reference();
-    myPhoneNumber =
-        Provider.of<UserInfomation>(context, listen: false).details.phoneNumber;
-    sentData.clear();
-    receivedData.clear();
-    try{
-      await ref.child('Sender').child(myPhoneNumber).once().then((DataSnapshot snap) {
+    try {
+      sentData.clear();
+      await ref
+          .child('Sender')
+          .child(myPhoneNumber)
+          .once()
+          .then((DataSnapshot snap) {
         var keys = snap.value.keys;
         var data = snap.value;
         for (var key in keys) {
-          DBData d = new DBData(key, data[key]['date'], data[key]['senderPhoneNumber'], data[key]['senderName'], data[key]['receiverPhoneNumber'], data[key]['receiverName'],
-              data[key]['savedPath'], data[key]['status'], data[key]['contents']);
+          DBData d = new DBData(
+              key,
+              data[key]['date'],
+              data[key]['senderPhoneNumber'],
+              data[key]['senderName'],
+              data[key]['receiverPhoneNumber'],
+              data[key]['receiverName'],
+              data[key]['savedPath'],
+              data[key]['status'],
+              data[key]['contents']);
           if (d.senderPhoneNumber == myPhoneNumber) {
             sentData.add(d);
           }
         }
       });
-    }
-    catch(Exception){
+      // setState(() {   
+      //   print('length : ${sentData.length}');
+      // });
+    } catch (Exception) {
       print('error');
     }
-    try{
-      await ref.child('Receiver').child(myPhoneNumber).once().then((DataSnapshot snap){
+
+    return sentData;
+  }
+
+  Future<List<DBData>> getMyReceivedDBData() async {
+    DatabaseReference ref = FirebaseDatabase.instance.reference();
+    try {
+
+      receivedData.clear();
+      await ref
+          .child('Receiver')
+          .child(myPhoneNumber)
+          .once()
+          .then((DataSnapshot snap) {
         var keys = snap.value.keys;
         var data = snap.value;
         for (var key in keys) {
-          DBData d = new DBData(key, data[key]['date'], data[key]['senderPhoneNumber'], data[key]['senderName'], data[key]['receiverPhoneNumber'], data[key]['receiverName'],
-              data[key]['savedPath'], data[key]['status'], data[key]['contents']);
+          DBData d = new DBData(
+              key,
+              data[key]['date'],
+              data[key]['senderPhoneNumber'],
+              data[key]['senderName'],
+              data[key]['receiverPhoneNumber'],
+              data[key]['receiverName'],
+              data[key]['savedPath'],
+              data[key]['status'],
+              data[key]['contents']);
           if (d.receiverPhoneNumber == myPhoneNumber) {
             receivedData.add(d);
           }
@@ -177,43 +211,64 @@ class _SearchPageState extends State<SearchPage>
           print('length : ${sentData.length}');
           print('length : ${receivedData.length}');
         });
-      });  
-    }
-    catch(Exception)
-    {
+      });
+    } catch (Exception) {
       print('error');
     }
+
+    return receivedData;
   }
 
-  
-  Future getFriendDBData(String friendPhoneNumber) async{
+  Future getFriendDBData(String friendPhoneNumber) async {
     DatabaseReference ref = FirebaseDatabase.instance.reference();
     friendSentData.clear();
     friendReceivedData.clear();
-    try{
-      await ref.child('Sender').child(friendPhoneNumber).once().then((DataSnapshot snap) {
+    try {
+      await ref
+          .child('Sender')
+          .child(friendPhoneNumber)
+          .once()
+          .then((DataSnapshot snap) {
         var keys = snap.value.keys;
         var data = snap.value;
         for (var key in keys) {
-          DBData d = new DBData(key, data[key]['date'], data[key]['senderPhoneNumber'], data[key]['senderName'], data[key]['receiverPhoneNumber'], data[key]['receiverName'],
-              data[key]['savedPath'], data[key]['status'], data[key]['contents']);
+          DBData d = new DBData(
+              key,
+              data[key]['date'],
+              data[key]['senderPhoneNumber'],
+              data[key]['senderName'],
+              data[key]['receiverPhoneNumber'],
+              data[key]['receiverName'],
+              data[key]['savedPath'],
+              data[key]['status'],
+              data[key]['contents']);
           if (d.senderPhoneNumber == friendPhoneNumber) {
             friendSentData.add(d);
           }
         }
-
       });
-    }
-    catch(Exception){
+    } catch (Exception) {
       print('error');
     }
-    try{
-      await ref.child('Receiver').child(friendPhoneNumber).once().then((DataSnapshot snap){
+    try {
+      await ref
+          .child('Receiver')
+          .child(friendPhoneNumber)
+          .once()
+          .then((DataSnapshot snap) {
         var keys = snap.value.keys;
         var data = snap.value;
         for (var key in keys) {
-          DBData d = new DBData(key, data[key]['date'], data[key]['senderPhoneNumber'], data[key]['senderName'], data[key]['receiverPhoneNumber'], data[key]['receiverName'],
-              data[key]['savedPath'], data[key]['status'], data[key]['contents']);
+          DBData d = new DBData(
+              key,
+              data[key]['date'],
+              data[key]['senderPhoneNumber'],
+              data[key]['senderName'],
+              data[key]['receiverPhoneNumber'],
+              data[key]['receiverName'],
+              data[key]['savedPath'],
+              data[key]['status'],
+              data[key]['contents']);
           if (d.receiverPhoneNumber == friendPhoneNumber) {
             friendReceivedData.add(d);
           }
@@ -222,10 +277,8 @@ class _SearchPageState extends State<SearchPage>
           print('length : ${friendSentData.length}');
           print('length : ${friendReceivedData.length}');
         });
-      });  
-    }
-    catch(Exception)
-    {
+      });
+    } catch (Exception) {
       print('error');
     }
   }
@@ -234,101 +287,115 @@ class _SearchPageState extends State<SearchPage>
     await setStatusOfMyDBData(myDialogAction, dbData);
     await setStatusOfFriendsDBData(myDialogAction, dbData);
     setState(() {
-      lock.synchronized(getMyDBData);
+        lock.synchronized(getMySentDBData);
+        lock.synchronized(getMyReceivedDBData);
     });
   }
-  
-  Future setStatusOfMyDBData(MyDialogAction myDialogAction, DBData dbData) async{
+
+  Future setStatusOfMyDBData(
+      MyDialogAction myDialogAction, DBData dbData) async {
     DatabaseReference ref = FirebaseDatabase.instance.reference();
 
-    try{
-      if(myDialogAction == MyDialogAction.yes){
-        await ref.child('Receiver').child(myPhoneNumber).child(dbData.key).update({'status' : '승인'});
-      }
-      else
-        await ref.child('Receiver').child(myPhoneNumber).child(dbData.key).update({'status' : '거절'});
-      
-    }
-    catch(Exception){
+    try {
+      if (myDialogAction == MyDialogAction.yes) {
+        await ref
+            .child('Receiver')
+            .child(myPhoneNumber)
+            .child(dbData.key)
+            .update({'status': '승인'});
+      } else
+        await ref
+            .child('Receiver')
+            .child(myPhoneNumber)
+            .child(dbData.key)
+            .update({'status': '거절'});
+    } catch (Exception) {
       print('update error');
     }
-    
   }
 
-  Future setStatusOfFriendsDBData(MyDialogAction myDialogAction, DBData dbData) async{
-
-    try{
+  Future setStatusOfFriendsDBData(
+      MyDialogAction myDialogAction, DBData dbData) async {
+    try {
       String modifyKey;
-      for(DBData db in friendSentData){
-        if(db.savedPath == dbData.savedPath){
+      for (DBData db in friendSentData) {
+        if (db.savedPath == dbData.savedPath) {
           modifyKey = db.key;
         }
       }
 
       DatabaseReference ref = FirebaseDatabase.instance.reference();
-      if(myDialogAction == MyDialogAction.yes){
-        await ref.child('Sender').child(dbData.senderPhoneNumber).child(modifyKey).update({'status' : '승인'});
+      if (myDialogAction == MyDialogAction.yes) {
+        await ref
+            .child('Sender')
+            .child(dbData.senderPhoneNumber)
+            .child(modifyKey)
+            .update({'status': '승인'});
+      } else {
+        await ref
+            .child('Sender')
+            .child(dbData.senderPhoneNumber)
+            .child(modifyKey)
+            .update({'status': '거절'});
       }
-      else{
-        await ref.child('Sender').child(dbData.senderPhoneNumber).child(modifyKey).update({'status' : '거절'});
-      }
-    }
-    catch(Exception){
+    } catch (Exception) {
       print('update error');
     }
-    
-   
   }
 
-
-  deleteDBData(int index) async{
+  deleteDBData(int index) async {
     String removeKey = sentData[index].key;
     String savedPath = sentData[index].savedPath;
     String friendPhoneNumber = sentData[index].receiverPhoneNumber;
 
-    // 친구 DB 정보 가져와서 
+    // 친구 DB 정보 가져와서
     await getFriendDBData(friendPhoneNumber);
-    // 친구 DB 지우고, 
+    // 친구 DB 지우고,
     deleteFriendReceivedDBData(savedPath, friendPhoneNumber);
 
-    // 내 보낸 DB 지우고, 
+    // 내 보낸 DB 지우고,
     DatabaseReference ref = FirebaseDatabase.instance.reference();
-    await ref.child('Sender').child(myPhoneNumber).child(removeKey).remove().then((_)
-    {
+    await ref
+        .child('Sender')
+        .child(myPhoneNumber)
+        .child(removeKey)
+        .remove()
+        .then((_) {
       print('delete $removeKey');
       setState(() {
-        lock.synchronized(getMyDBData);
+        lock.synchronized(getMySentDBData);
+        lock.synchronized(getMyReceivedDBData);
       });
     });
-    
   }
 
   // 친구 받은 dB 삭제는 savedpath 로 찾자.
-  deleteFriendReceivedDBData(String savedPath, String freindPhoneNumber) async{
+  deleteFriendReceivedDBData(String savedPath, String freindPhoneNumber) async {
     String removeKey;
-    for(DBData db in friendReceivedData){
-      if(db.savedPath == savedPath){
+    for (DBData db in friendReceivedData) {
+      if (db.savedPath == savedPath) {
         removeKey = db.key;
       }
     }
 
     DatabaseReference ref = FirebaseDatabase.instance.reference();
-    await ref.child('Receiver').child(freindPhoneNumber).child(removeKey).remove().then((_)
-    {
+    await ref
+        .child('Receiver')
+        .child(freindPhoneNumber)
+        .child(removeKey)
+        .remove()
+        .then((_) {
       print('delete $removeKey');
       setState(() {
-        lock.synchronized(getMyDBData);
+        lock.synchronized(getMySentDBData);
+        lock.synchronized(getMyReceivedDBData);
       });
     });
   }
 
-
-
-
   @override
   Widget build(BuildContext context) {
-   
-    _playerCompleteSubscription = audioPlayer.onPlayerCompletion.listen((msg){
+    _playerCompleteSubscription = audioPlayer.onPlayerCompletion.listen((msg) {
       _onComplete();
       setState(() {});
     });
@@ -355,16 +422,61 @@ class _SearchPageState extends State<SearchPage>
           ),
         ),
       ),
-      body: new TabBarView(
+      body: FutureBuilder(
+        future: getMySentDBData(),
+        builder: (BuildContext context, AsyncSnapshot snapshot){
+          switch(snapshot.connectionState){
+            case ConnectionState.waiting:
+              return Center(child: CircularProgressIndicator(),);
+              break;
+     
+            case ConnectionState.none:
+              return new Container(
+                child: Center(
+                  child: Text('none'),
+                ),
+              );
+              break;
+            case ConnectionState.active:
+              return new Container(
+                child: Center(
+                  child: Text('active'),
+                ),
+              );
+              break;
+            case ConnectionState.done:
+              if(snapshot.error)
+              {
+                 return new Container(
+                   child: Center(
+                     child: Text('error'),
+                   ),
+                 );
+              }
+              else{
+                setState(() {
+                  getTabBarView();
+                });
+              }
+              break;
+          }
+          
+        }), 
+    );
+  }
+
+  Future<Container> getTabBarView() async{
+    return Container(
+      child : TabBarView(
         controller: ctr,
         children: <Widget>[
           receivedTabPage(),
           sentTabPage(),
         ],
-      )
+      ),
     );
-    
   }
+
 
   receivedTabPage() {
     return new Container(
@@ -374,21 +486,18 @@ class _SearchPageState extends State<SearchPage>
         : new ListView.builder(
             itemCount: receivedData.length,
             itemBuilder: (_, index) {
-              DBData dbData = new DBData(receivedData[index].key,
-                receivedData[index].date,
-                receivedData[index].senderPhoneNumber,
-                receivedData[index].senderName,
-                receivedData[index].receiverPhoneNumber,
-                receivedData[index].receiverName,
-                receivedData[index].savedPath,
-                receivedData[index].status,
-                receivedData[index].contents);
-              return ReceivedUI(
-                dbData,
-                index);
-            }
-          ),
-              
+              DBData dbData = new DBData(
+                  receivedData[index].key,
+                  receivedData[index].date,
+                  receivedData[index].senderPhoneNumber,
+                  receivedData[index].senderName,
+                  receivedData[index].receiverPhoneNumber,
+                  receivedData[index].receiverName,
+                  receivedData[index].savedPath,
+                  receivedData[index].status,
+                  receivedData[index].contents);
+              return ReceivedUI(dbData, index);
+            }),
     );
   }
 
@@ -396,62 +505,64 @@ class _SearchPageState extends State<SearchPage>
     return new Container(
       padding: EdgeInsets.all(20.0),
       child: sentData.length == 0
-        ? displayedPage(false)
-        : new ListView.builder(
-            itemCount: sentData.length,
-            itemBuilder: (_, index) {
-              DBData dbData = new DBData(sentData[index].key,
-                sentData[index].date,
-                sentData[index].senderPhoneNumber,
-                sentData[index].senderName,
-                sentData[index].receiverPhoneNumber,
-                sentData[index].receiverName,
-                sentData[index].savedPath,
-                sentData[index].status,
-                sentData[index].contents);
-              return SentUI(
-                dbData,
-                index);
-            }),
+          ? displayedPage(false)
+          : new ListView.builder(
+              itemCount: sentData.length,
+              itemBuilder: (_, index) {
+                DBData dbData = new DBData(
+                    sentData[index].key,
+                    sentData[index].date,
+                    sentData[index].senderPhoneNumber,
+                    sentData[index].senderName,
+                    sentData[index].receiverPhoneNumber,
+                    sentData[index].receiverName,
+                    sentData[index].savedPath,
+                    sentData[index].status,
+                    sentData[index].contents);
+                return SentUI(dbData, index);
+              }),
     );
   }
 
-  Container displayedPage(bool hasFile){
-    if(hasFile == false) {
+  Container displayedPage(bool hasFile) {
+    if (hasFile == false) {
       return Container(
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height,
-
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             Text('비었음!'),
-
           ],
         ),
       );
     }
-    
   }
 
-  displayProgressBar(BuildContext context, DBData dbData) async{
-    pr = new ProgressDialog(context);
-    pr.style(message: 'Please wait...');
-  
-    pr.show();    
-    _downloadFile(context, dbData).then((onValue) {
-      pr.hide();
-    });
+  displayProgressBar(BuildContext context, DBData dbData) async {
+    // 재생중이면 그냥 정지하고 빠져나가게 하기
+    if(_isPlaying == true) {
+      _stopPlayRec();
+      return; 
+    }
+
+    else{
+      pr = new ProgressDialog(context);
+      pr.style(message: 'Please wait...');
+
+      pr.show();
+      _downloadFile(context, dbData).then((onValue) {
+        pr.hide();
+      });
+    }
     
   }
 
   Future _downloadFile(BuildContext context, DBData dbData) async {
-
-   
     StorageReference firebaseStorageRef =
         FirebaseStorage.instance.ref().child(dbData.savedPath);
-            
+
     final String url = await firebaseStorageRef.getDownloadURL();
     final http.Response downloadData = await http.get(url);
     appDocDirectory = await getApplicationDocumentsDirectory();
@@ -461,8 +572,9 @@ class _SearchPageState extends State<SearchPage>
       await tempFile.delete();
     }
     await tempFile.create();
-    final StorageFileDownloadTask task = firebaseStorageRef.writeToFile(tempFile);
-    final int byteCount = (await task.future).totalByteCount; 
+    final StorageFileDownloadTask task =
+        firebaseStorageRef.writeToFile(tempFile);
+    final int byteCount = (await task.future).totalByteCount;
     var bodyBytes = downloadData.bodyBytes;
     final String name = await firebaseStorageRef.getName();
     final String path = await firebaseStorageRef.getPath();
@@ -478,22 +590,20 @@ class _SearchPageState extends State<SearchPage>
       print("Downloaded.");
     });
   }
-  
-  Future _deleteFile(DBData dbData, int index) async{
-    
+
+  Future _deleteFile(DBData dbData, int index) async {
     // 폴더 파일 지우고,
-    
-    StorageReference firebaseStorageRef = FirebaseStorage.instance.ref().child(dbData.savedPath);
+
+    StorageReference firebaseStorageRef =
+        FirebaseStorage.instance.ref().child(dbData.savedPath);
     firebaseStorageRef.delete();
-    
+
     StorageReference parent = firebaseStorageRef.getParent();
     //todo: 나중에 폴더 삭제하는 기능까지 넣어야한다....
-
 
     // DB 삭제하고 List 초기화
     deleteDBData(index);
   }
-
 
   _playRec() async {
     print("Search recording file : " + tempFile.path);
@@ -513,7 +623,6 @@ class _SearchPageState extends State<SearchPage>
     } catch (Exception) {}
   }
 
-  
   _stopPlayRec() async {
     print("Search recording file : " + tempFile.path);
 
@@ -529,68 +638,62 @@ class _SearchPageState extends State<SearchPage>
     } catch (Exception) {}
   }
 
-  _createAlertDialog(BuildContext context, DBData dbData) async{
-    if(dbData.status == ApprovalCondition.ready){
+  _createAlertDialog(BuildContext context, DBData dbData) async {
+    if (dbData.status == ApprovalCondition.ready) {
       await showAlert(context, dbData);
-    }
-    else
-    {
+    } else {
       showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              content: new Text('이미 결정한 파일입니다. 상대방에게 삭제 요청을 하세요.'),
+              actions: <Widget>[
+                new FlatButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(true);
+                  },
+                  child: Text('ok'),
+                )
+              ],
+            );
+          });
+    }
+  }
+
+  Future<void> showAlert(BuildContext context, DBData dbData) async {
+    showDialog(
         context: context,
-        builder: (context){
+        builder: (context) {
           return AlertDialog(
-            content: new Text('이미 결정한 파일입니다. 상대방에게 삭제 요청을 하세요.'),
+            content: new Text(
+              '음성 파일을 듣고 동의 여부를 선택하세요.',
+              style: new TextStyle(fontSize: 20.0),
+            ),
             actions: <Widget>[
               new FlatButton(
-                onPressed : () { 
-                  Navigator.of(context).pop(true);
+                onPressed: () {
+                  _dialogResult(context, MyDialogAction.yes, dbData);
                 },
-                child: Text('ok'),
-              )
+                child: Text('동의'),
+              ),
+              new FlatButton(
+                onPressed: () {
+                  _dialogResult(context, MyDialogAction.no, dbData);
+                },
+                child: Text('거절'),
+              ),
             ],
           );
-        }
-      );
-    }
-  }
-  
-  Future<void> showAlert(BuildContext context, DBData dbData) async{
-    showDialog(
-      context: context,
-      builder: (context){
-        return AlertDialog(
-          content: new Text('Yes or Not', style: new TextStyle(fontSize: 30.0),),
-          actions: <Widget>[
-            new FlatButton(
-              onPressed: (){
-                _dialogResult(context, MyDialogAction.yes, dbData);
-                
-              }, 
-              child: Text('Yes'),
-            ),
-            new FlatButton(
-              onPressed: (){
-                _dialogResult(context, MyDialogAction.no, dbData);
-                
-              }, 
-              child: Text('No'),
-            )
-          ],
-        );
-      }
-    );
+        });
   }
 
-  _dialogResult (BuildContext context, MyDialogAction value, DBData dbData) async {
-    
+  _dialogResult(
+      BuildContext context, MyDialogAction value, DBData dbData) async {
     await setStatusOfDBData(value, dbData);
     Navigator.of(context).pop(true);
-    
   }
 
-
   Widget SentUI(DBData dbData, int index) {
-
     Color backColor;
 
     if (dbData.status == ApprovalCondition.ready) {
@@ -604,80 +707,88 @@ class _SearchPageState extends State<SearchPage>
     }
 
     return Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15.0),
-        ),
-        elevation: 10,
-        child: Padding(
-          padding: EdgeInsets.all(10),
-          child: Row(
-            children: <Widget>[
-              Expanded(
-                flex: 1,
-                child: new CircleAvatar(
-                  backgroundColor: backColor,
-                  child: Text(dbData.status),
-                  foregroundColor: Colors.white,
-                  minRadius: 40,
-                ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15.0),
+      ),
+      elevation: 20,
+      child: Padding(
+        padding: EdgeInsets.all(10),
+        child: Row(
+          children: <Widget>[
+            Expanded(
+              flex: 1,
+              child: new CircleAvatar(
+                backgroundColor: backColor,
+                child: Text(dbData.status),
+                foregroundColor: Colors.white,
+                minRadius: 40,
               ),
-              Expanded(
-                flex: 3,
-                child: new Container(
-                  child:Padding(
-                    padding: EdgeInsets.only(left: 20),
-                    child: new Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        // new Text('보낸사람 : '),
-                        // new Text(dbData.senderName, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),),
-                        // new Text(dbData.senderPhoneNumber + '\n', style: TextStyle(color: Colors.grey),),
+            ),
+            Expanded(
+              flex: 3,
+              child: new Container(
+                child: Padding(
+                  padding: EdgeInsets.only(left: 20),
+                  child: new Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          new Text(
+                            dbData.receiverName,
+                            style: TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold),
+                          ),
+                          new Text(
+                            ' (' + dbData.receiverPhoneNumber + ')' + '\n',
+                          ),
+                        ],
+                      ),
 
-                        //new Text('받는사람 : ',  style: TextStyle(color: Colors.grey),),
-                        new Text(dbData.receiverName, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),),
-                        new Text(dbData.receiverPhoneNumber + '\n',),
-
-                        //new Text('생성일 : '),
-                        new Text(dbData.date.toString(), style: TextStyle(color: Colors.grey),)
-                      ],
-                    ),
+                      //new Text('생성일 : '),
+                      new Text(
+                        dbData.date.toString(),
+                        style: TextStyle(color: Colors.grey),
+                      )
+                    ],
                   ),
                 ),
               ),
-              Expanded(
-                flex: 1,
-                child: new Container(
-                  child: sentData.isNotEmpty ? IconButton(
-                    icon: sentDataSelectPlayIcon(index), 
-                    onPressed: (){
-                      sentData[index].isSelected = true;
-                      displayProgressBar(context, dbData);
-                    },
-                  ): null,
+            ),
+            Expanded(
+              flex: 1,
+              child: new Container(
+                child: sentData.isNotEmpty
+                    ? IconButton(
+                        icon: sentDataSelectPlayIcon(index),
+                        onPressed: () {
+                          sentData[index].isSelected = true;
+                          displayProgressBar(context, dbData);
+                        },
+                      )
+                    : null,
+              ),
+            ),
+            Expanded(
+              flex: 1,
+              child: new Container(
+                child: IconButton(
+                  icon: Icon(Icons.delete),
+                  onPressed: () {
+                    sentData[index].isSelected = true;
+                    _deleteFile(dbData, index);
+                  },
                 ),
               ),
-              Expanded(
-                flex: 1,
-                child: new Container(
-                  child: IconButton(
-                    icon: Icon(Icons.delete), 
-                    onPressed: (){
-                      sentData[index].isSelected = true;
-                      _deleteFile(dbData, index);
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
+      ),
     );
-    
   }
-  
-  
-  Widget ReceivedUI(DBData dbData, int index) {
 
+  Widget ReceivedUI(DBData dbData, int index) {
     Color backColor;
 
     if (dbData.status == ApprovalCondition.ready) {
@@ -690,71 +801,75 @@ class _SearchPageState extends State<SearchPage>
       backColor = Colors.red;
     }
 
-   return GestureDetector(
+    return GestureDetector(
       onTap: () async {
         await getFriendDBData(dbData.senderPhoneNumber);
         _createAlertDialog(context, dbData);
       },
       child: Card(
-      shape: RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15.0),
         ),
-        elevation: 10,
+        elevation: 20,
         child: Padding(
           padding: EdgeInsets.all(10),
           child: Row(
             children: <Widget>[
               Expanded(
                 flex: 1,
-                child: new CircleAvatar(
-                  backgroundColor: backColor,
-                  child: Text(dbData.status),
-                  foregroundColor: Colors.white,
-                  minRadius: 40,
+                child: Padding(
+                  padding: EdgeInsets.only(right: 10),
+                  child: new CircleAvatar(
+                    backgroundColor: backColor,
+                    child: Text(dbData.status),
+                    foregroundColor: Colors.white,
+                    minRadius: 40,
+                  ),
                 ),
               ),
               Expanded(
                 flex: 3,
                 child: new Container(
-                  child : new Padding(
-                    padding: EdgeInsets.all(3),
-                    child: new Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        new Text('보낸사람 : ', style:  TextStyle(color: Colors.grey)),
-                        new Text(dbData.senderName, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),),
-                        new Text(dbData.senderPhoneNumber + '\n', ),
-                       
-
-                        // new Text('받는사람 : '),
-                        // new Text(dbData.receiverName, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),),
-                        // new Text(dbData.receiverPhoneNumber + '\n', style: TextStyle(color: Colors.grey),),
-
-                        new Text('생성일 : '),
-                        new Text(dbData.date.toString(), style: TextStyle(color: Colors.grey),)
-                        
-                        //new Text('savedPath : $_savedPath'),
-                        //new Text('status : $_status'),
-                        //new Text('Sender : $_contents'),
-                      ],
-                    ),
-                  )
-                  
-                ),
+                    child: new Padding(
+                  padding: EdgeInsets.all(3),
+                  child: new Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          new Text(
+                            dbData.senderName,
+                            style: TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold),
+                          ),
+                          new Text(
+                            ' (' + dbData.senderPhoneNumber + ')' + '\n',
+                          ),
+                        ],
+                      ),
+                      new Text(
+                        dbData.date.toString(),
+                        style: TextStyle(color: Colors.grey),
+                      )
+                    ],
+                  ),
+                )),
               ),
               Expanded(
                 flex: 1,
                 child: new Container(
-                  child: receivedData.isNotEmpty ? IconButton(
-                    icon: receivedDataSelectPlayIcon(index), 
-                    onPressed: (){
-                      receivedData[index].isSelected = true;
-                      displayProgressBar(context, dbData);
-                    },
-                  ) : null,
+                  child: receivedData.isNotEmpty
+                      ? IconButton(
+                          icon: receivedDataSelectPlayIcon(index),
+                          onPressed: () {
+                            receivedData[index].isSelected = true;
+                            displayProgressBar(context, dbData);
+                          },
+                        )
+                      : null,
                 ),
               ),
-              
             ],
           ),
         ),
@@ -762,40 +877,35 @@ class _SearchPageState extends State<SearchPage>
     );
   }
 
-  Icon sentDataSelectPlayIcon(int index)
-  {
-    if(sentData[index].isSelected){
-      if(_isPlaying == false){
+  Icon sentDataSelectPlayIcon(int index) {
+    if (sentData[index].isSelected) {
+      sentData[index].isSelected = false;
+      if (_isPlaying == false) {
         return Icon(Icons.play_arrow);
-      }
-      else{
-        sentData[index].isSelected = false;
+      } else {
+
         return Icon(Icons.stop);
       }
-    }
-    else{
+    } else {
       return Icon(Icons.play_arrow);
     }
   }
 
-  Icon receivedDataSelectPlayIcon(int index)
-  {
-    if(receivedData[index].isSelected){
-      if(_isPlaying == false){
+  Icon receivedDataSelectPlayIcon(int index) {
+    if (receivedData[index].isSelected) {
+      receivedData[index].isSelected = false;
+      if (_isPlaying == false) {
         return Icon(Icons.play_arrow);
-      }
-      else{
-        receivedData[index].isSelected = false;
+      } else {
         return Icon(Icons.stop);
       }
-    }
-    else{
+    } else {
       return Icon(Icons.play_arrow);
     }
   }
 
   // change play status after play audio.
   void _onComplete() {
-      setState(() => _isPlaying = false);
-    }
+    setState(() => _isPlaying = false);
+  }
 }

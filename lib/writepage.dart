@@ -18,6 +18,7 @@ import 'package:sms_maintained/sms.dart';
 import 'dart:io' as io;
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:volume/volume.dart';
 import 'data/tabstates.dart';
 import 'data/userinfo.dart';
 
@@ -65,6 +66,11 @@ class _WritePageState extends State<WritePage> {
 
     myPhoneNumber = Provider.of<UserInfomation>(context, listen: false).details.phoneNumber;
     myName = Provider.of<UserInfomation>(context,  listen: false).details.userName;
+    initPlatformState();
+  }
+
+  Future<void> initPlatformState() async{
+    await Volume.controlVolume(AudioManager.STREAM_MUSIC);
   }
 
   @override
@@ -90,9 +96,11 @@ class _WritePageState extends State<WritePage> {
             Expanded(
               flex: 10,
               child: CircleAvatar(
-                radius: 54,
+                radius: 36,
                 backgroundColor: _isRecording ? Colors.white : Colors.black,
                 child: CircleAvatar(
+                  radius: 34,
+                  backgroundColor: _isRecording ? Colors.pink[200] : Colors.white,
                   child: IconButton(
                     icon: _hasRecFile
                         ? (_isPlaying ? Icon(Icons.stop) : Icon(Icons.play_arrow))
@@ -108,8 +116,7 @@ class _WritePageState extends State<WritePage> {
                       }
                     },
                   ),
-                  radius: 50,
-                  backgroundColor: _isRecording ? Colors.pink[200] : Colors.white,
+                  
                 ),
               ),
             ),
@@ -182,11 +189,14 @@ class _WritePageState extends State<WritePage> {
       contactUserInfo = new ContactUserInfo();
 
       await createAlertDialog(context);
-    
+      
+      String maker = contactUserInfo.name;
+      if(contactUserInfo.name.isEmpty) maker = contactUserInfo.phoneNumber;
+      
       if(contactUserInfo.phoneNumber != null){
         Scaffold.of(context)
         ..removeCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(contactUserInfo.name + '님께 요청 메세지를 발송했습니다.')));
+        ..showSnackBar(SnackBar(content: Text(maker + '님께 요청 메세지를 발송했습니다.')));
         print(contactUserInfo.phoneNumber);
       }
     }

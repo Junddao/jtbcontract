@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:jtbcontract/data/contactUserInfo.dart';
 
-class InputPhoneNumber extends StatefulWidget {
   @override
+class InputPhoneNumber extends StatefulWidget {
   _InputPhoneNumberState createState() => _InputPhoneNumberState();
 }
 
@@ -18,10 +18,11 @@ class _InputPhoneNumberState extends State<InputPhoneNumber> {
     super.dispose();
   }
 
-  ContactUserInfo contactUserInfo;
+  ContactUserInfo contactUserInfo = new ContactUserInfo();
 
   @override
   Widget build(BuildContext context) {
+
     return new Scaffold(
       backgroundColor: Colors.white,
       body: new Container(
@@ -54,7 +55,7 @@ class _InputPhoneNumberState extends State<InputPhoneNumber> {
                       child: FlatButton.icon(
                       color: Colors.white,
                       icon: Icon(Icons.cancel), //`Icon` to display
-                      label: Text('cancel'), //`Text` to display
+                      label: Text('취소'), //`Text` to display
                       onPressed: () {
                         Navigator.pop(context, null);
                       },
@@ -64,7 +65,7 @@ class _InputPhoneNumberState extends State<InputPhoneNumber> {
                       child: FlatButton.icon(
                       color: Colors.white,
                       icon: Icon(Icons.send), //`Icon` to display
-                      label: Text('Send'), //`Text` to display
+                      label: Text('보내기'), //`Text` to display
                       onPressed: () {
                         getPhoneNumber();
                         getPhoneName();
