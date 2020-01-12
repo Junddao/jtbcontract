@@ -28,7 +28,7 @@ class _GetFriendPageState extends State<GetFriendPage> {
   }
 
   
-  getDBData() async {
+  Future<List<DBContacts>> getDBData() async {
     DatabaseReference ref = FirebaseDatabase.instance.reference();
     liContactUserInfo.clear();
     try{
@@ -40,14 +40,11 @@ class _GetFriendPageState extends State<GetFriendPage> {
           liContactUserInfo.add(d); 
         }
       });
-       setState(() {
-          print('length : ${liContactUserInfo.length}');
-      });
-      
     }
     catch(Exception){
        print('error');
     }
+    return liContactUserInfo;
   }
 
   @override
@@ -57,27 +54,64 @@ class _GetFriendPageState extends State<GetFriendPage> {
         title : Text('jtb 친구목록'),
         backgroundColor: Colors.black,
       ), 
-      body: Container(
-        child: liContactUserInfo != null ? ListView.builder(
-          itemCount: liContactUserInfo.length ?? 0,
-          itemBuilder: (BuildContext context, int index) {
-            DBContacts dbContacts = liContactUserInfo.elementAt(index);
-            return ListTile(
-              onTap: () {
-                getPhoneNumber(dbContacts);
-                getName(dbContacts);
-                Navigator.pop(context, contactUserInfo);
+      body: FutureBuilder(
+        future: getDBData(),
+        builder: (BuildContext context, AsyncSnapshot snapshot){
+          switch(snapshot.connectionState)
+          {
+            case ConnectionState.waiting:
+              return Container(
+                child: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
+              break;
+            case ConnectionState.done:
+              if (snapshot.hasData == null) {
+                return Container();
+              }
+              break;
+            case ConnectionState.none:
+              return Container(
+                child: Center(
+                  child: Text('none'),
+                ),
+              );
+              break;
+            case ConnectionState.active:
+              return Container(
+                child: Center(
+                  child: Text('active'),
+                ),
+              );
+              break;
+          }
+          return Container(
+            child: liContactUserInfo != null ? ListView.builder(
+              itemCount: liContactUserInfo.length ?? 0,
+              itemBuilder: (BuildContext context, int index) {
+                DBContacts dbContacts = liContactUserInfo.elementAt(index);
+                return ListTile(
+                  onTap: () {
+                    getPhoneNumber(dbContacts);
+                    getName(dbContacts);
+                    Navigator.pop(context, contactUserInfo);
+                  },
+                  leading: (dbContacts.name != null && dbContacts.name.length > 0)
+                      ? CircleAvatar(child: Text(dbContacts.name.substring(0,1)), backgroundColor: Colors.black, foregroundColor: Colors.white,)
+                      : CircleAvatar(child: Text('-'), backgroundColor: Colors.black, foregroundColor: Colors.white,),
+                  title: Text(dbContacts.name ?? ""),
+                  subtitle: Text(dbContacts.phoneNumber ?? ""),
+                );
               },
-              leading: (dbContacts.name != null && dbContacts.name.length > 0)
-                  ? CircleAvatar(child: Text(dbContacts.name.substring(0,1)), backgroundColor: Colors.black, foregroundColor: Colors.white,)
-                  : CircleAvatar(child: Text('-'), backgroundColor: Colors.black, foregroundColor: Colors.white,),
-              title: Text(dbContacts.name ?? ""),
-              subtitle: Text(dbContacts.phoneNumber ?? ""),
-            );
-          },
-        )
-        : Center(child: CircularProgressIndicator(),),
-      ),
+            )
+            : Center(child: CircularProgressIndicator(),),
+          );
+        }
+      )
+      
+      
+      
     );
   }
 

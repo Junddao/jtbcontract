@@ -48,7 +48,7 @@ class _LoginPageState extends State<LoginPage> {
       _info.line1Number,
     );
 
-    Provider.of<UserInfomation>(context).details = details;
+    Provider. of<UserInfomation>(context).details = details;
     Navigator.of(context)
             .pushAndRemoveUntil(MaterialPageRoute(builder: (BuildContext context) => TabPage()),(Route<dynamic> route) => false);
     // Navigator.of(context)

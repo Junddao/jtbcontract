@@ -72,8 +72,8 @@ class _SearchPageState extends State<SearchPage>
   void initState() {
     myPhoneNumber =
         Provider.of<UserInfomation>(context, listen: false).details.phoneNumber;
-    lock.synchronized(getMySentDBData);
-    lock.synchronized(getMyReceivedDBData);
+    // lock.synchronized(getMySentDBData);
+    // lock.synchronized(getMyReceivedDBData);
     ctr = new TabController(vsync: this, length: 2);
 
     FirebaseDatabase firebaseDatabase = FirebaseDatabase.instance;
@@ -106,8 +106,8 @@ class _SearchPageState extends State<SearchPage>
         }
       });
       setState(() {
-        lock.synchronized(getMySentDBData);
-        lock.synchronized(getMyReceivedDBData);
+        // lock.synchronized(getMySentDBData);
+        // lock.synchronized(getMyReceivedDBData);
       });
     } catch (Exception) {
       print('getStatusStream error');
@@ -124,15 +124,15 @@ class _SearchPageState extends State<SearchPage>
 
   _onEntryChanged(Event event) {
     setState(() {
-        lock.synchronized(getMySentDBData);
-        lock.synchronized(getMyReceivedDBData);
+      // lock.synchronized(getMySentDBData);
+      // lock.synchronized(getMyReceivedDBData);
     });
   }
 
   _onEntryAdded(Event event) {
     setState(() {
-        lock.synchronized(getMySentDBData);
-        lock.synchronized(getMyReceivedDBData);
+      // lock.synchronized(getMySentDBData);
+      // lock.synchronized(getMyReceivedDBData);
     });
   }
 
@@ -145,7 +145,7 @@ class _SearchPageState extends State<SearchPage>
 
   Future<List<DBData>> getMySentDBData() async {
     DatabaseReference ref = FirebaseDatabase.instance.reference();
-    try {
+    try{
       sentData.clear();
       await ref
           .child('Sender')
@@ -170,53 +170,48 @@ class _SearchPageState extends State<SearchPage>
           }
         }
       });
-      // setState(() {   
-      //   print('length : ${sentData.length}');
-      // });
-    } catch (Exception) {
-      print('error');
     }
-
+    catch(Exception) {
+      print('sent db error');
+    }
+    
     return sentData;
   }
 
   Future<List<DBData>> getMyReceivedDBData() async {
     DatabaseReference ref = FirebaseDatabase.instance.reference();
-    try {
 
+    try{
       receivedData.clear();
-      await ref
-          .child('Receiver')
-          .child(myPhoneNumber)
-          .once()
-          .then((DataSnapshot snap) {
-        var keys = snap.value.keys;
-        var data = snap.value;
-        for (var key in keys) {
-          DBData d = new DBData(
-              key,
-              data[key]['date'],
-              data[key]['senderPhoneNumber'],
-              data[key]['senderName'],
-              data[key]['receiverPhoneNumber'],
-              data[key]['receiverName'],
-              data[key]['savedPath'],
-              data[key]['status'],
-              data[key]['contents']);
-          if (d.receiverPhoneNumber == myPhoneNumber) {
-            receivedData.add(d);
-          }
-        }
-        setState(() {
-          print('length : ${sentData.length}');
-          print('length : ${receivedData.length}');
-        });
-      });
-    } catch (Exception) {
-      print('error');
+          await ref
+              .child('Receiver')
+              .child(myPhoneNumber)
+              .once()
+              .then((DataSnapshot snap) {
+            var keys = snap.value.keys;
+            var data = snap.value;
+            for (var key in keys) {
+              DBData d = new DBData(
+                  key,
+                  data[key]['date'],
+                  data[key]['senderPhoneNumber'],
+                  data[key]['senderName'],
+                  data[key]['receiverPhoneNumber'],
+                  data[key]['receiverName'],
+                  data[key]['savedPath'],
+                  data[key]['status'],
+                  data[key]['contents']);
+              if (d.receiverPhoneNumber == myPhoneNumber) {
+                receivedData.add(d);
+              }
+            }
+          });
     }
-
+    catch(Exception) {
+      print('received db error');
+    }
     return receivedData;
+    
   }
 
   Future getFriendDBData(String friendPhoneNumber) async {
@@ -287,8 +282,8 @@ class _SearchPageState extends State<SearchPage>
     await setStatusOfMyDBData(myDialogAction, dbData);
     await setStatusOfFriendsDBData(myDialogAction, dbData);
     setState(() {
-        lock.synchronized(getMySentDBData);
-        lock.synchronized(getMyReceivedDBData);
+      // lock.synchronized(getMySentDBData);
+      // lock.synchronized(getMyReceivedDBData);
     });
   }
 
@@ -363,8 +358,8 @@ class _SearchPageState extends State<SearchPage>
         .then((_) {
       print('delete $removeKey');
       setState(() {
-        lock.synchronized(getMySentDBData);
-        lock.synchronized(getMyReceivedDBData);
+        // lock.synchronized(getMySentDBData);
+        // lock.synchronized(getMyReceivedDBData);
       });
     });
   }
@@ -387,8 +382,8 @@ class _SearchPageState extends State<SearchPage>
         .then((_) {
       print('delete $removeKey');
       setState(() {
-        lock.synchronized(getMySentDBData);
-        lock.synchronized(getMyReceivedDBData);
+        // lock.synchronized(getMySentDBData);
+        // lock.synchronized(getMyReceivedDBData);
       });
     });
   }
@@ -422,106 +417,126 @@ class _SearchPageState extends State<SearchPage>
           ),
         ),
       ),
-      body: FutureBuilder(
-        future: getMySentDBData(),
-        builder: (BuildContext context, AsyncSnapshot snapshot){
-          switch(snapshot.connectionState){
+      body: Container(
+        child: TabBarView(
+          controller: ctr,
+          children: <Widget>[
+            receivedTabPage(),
+            sentTabPage(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  receivedTabPage() {
+    return FutureBuilder(
+        future: lock.synchronized(getMyReceivedDBData),
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          switch (snapshot.connectionState) {
             case ConnectionState.waiting:
-              return Center(child: CircularProgressIndicator(),);
+              return Container(
+                child: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
               break;
-     
+            case ConnectionState.done:
+              if (snapshot.hasData == null) {
+                return Container();
+              }
+              break;
             case ConnectionState.none:
-              return new Container(
+              return Container(
                 child: Center(
                   child: Text('none'),
                 ),
               );
               break;
             case ConnectionState.active:
-              return new Container(
+              return Container(
                 child: Center(
                   child: Text('active'),
                 ),
               );
               break;
-            case ConnectionState.done:
-              if(snapshot.error)
-              {
-                 return new Container(
-                   child: Center(
-                     child: Text('error'),
-                   ),
-                 );
-              }
-              else{
-                setState(() {
-                  getTabBarView();
-                });
-              }
-              break;
           }
-          
-        }), 
-    );
-  }
-
-  Future<Container> getTabBarView() async{
-    return Container(
-      child : TabBarView(
-        controller: ctr,
-        children: <Widget>[
-          receivedTabPage(),
-          sentTabPage(),
-        ],
-      ),
-    );
-  }
-
-
-  receivedTabPage() {
-    return new Container(
-      padding: EdgeInsets.all(20.0),
-      child: receivedData.length == 0
-        ? displayedPage(false)
-        : new ListView.builder(
-            itemCount: receivedData.length,
-            itemBuilder: (_, index) {
-              DBData dbData = new DBData(
-                  receivedData[index].key,
-                  receivedData[index].date,
-                  receivedData[index].senderPhoneNumber,
-                  receivedData[index].senderName,
-                  receivedData[index].receiverPhoneNumber,
-                  receivedData[index].receiverName,
-                  receivedData[index].savedPath,
-                  receivedData[index].status,
-                  receivedData[index].contents);
-              return ReceivedUI(dbData, index);
-            }),
-    );
+          return Container(
+            padding: EdgeInsets.all(20.0),
+            child: receivedData.length == 0
+                ? displayedPage(false)
+                : new ListView.builder(
+                    itemCount: receivedData.length,
+                    itemBuilder: (_, index) {
+                      DBData dbData = new DBData(
+                          receivedData[index].key,
+                          receivedData[index].date,
+                          receivedData[index].senderPhoneNumber,
+                          receivedData[index].senderName,
+                          receivedData[index].receiverPhoneNumber,
+                          receivedData[index].receiverName,
+                          receivedData[index].savedPath,
+                          receivedData[index].status,
+                          receivedData[index].contents);
+                      return ReceivedUI(dbData, index);
+                    }),
+          );
+        });
   }
 
   sentTabPage() {
-    return new Container(
-      padding: EdgeInsets.all(20.0),
-      child: sentData.length == 0
-          ? displayedPage(false)
-          : new ListView.builder(
-              itemCount: sentData.length,
-              itemBuilder: (_, index) {
-                DBData dbData = new DBData(
-                    sentData[index].key,
-                    sentData[index].date,
-                    sentData[index].senderPhoneNumber,
-                    sentData[index].senderName,
-                    sentData[index].receiverPhoneNumber,
-                    sentData[index].receiverName,
-                    sentData[index].savedPath,
-                    sentData[index].status,
-                    sentData[index].contents);
-                return SentUI(dbData, index);
-              }),
-    );
+    return FutureBuilder(
+        future: lock.synchronized(getMySentDBData),
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          switch (snapshot.connectionState) {
+            case ConnectionState.waiting:
+              return Container(
+                child: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
+              break;
+            case ConnectionState.done:
+              if (snapshot.hasData == null) {
+                return Container();
+              }
+              break;
+            case ConnectionState.none:
+              return Container(
+                child: Center(
+                  child: Text('none'),
+                ),
+              );
+              break;
+            case ConnectionState.active:
+              return Container(
+                child: Center(
+                  child: Text('active'),
+                ),
+              );
+              break;
+          }
+          return new Container(
+            padding: EdgeInsets.all(20.0),
+            child: sentData.length == 0
+                ? displayedPage(false)
+                : new ListView.builder(
+                    itemCount: sentData.length,
+                    itemBuilder: (_, index) {
+                      DBData dbData = new DBData(
+                          sentData[index].key,
+                          sentData[index].date,
+                          sentData[index].senderPhoneNumber,
+                          sentData[index].senderName,
+                          sentData[index].receiverPhoneNumber,
+                          sentData[index].receiverName,
+                          sentData[index].savedPath,
+                          sentData[index].status,
+                          sentData[index].contents);
+                      return SentUI(dbData, index);
+                    }),
+          );
+        });
   }
 
   Container displayedPage(bool hasFile) {
@@ -542,12 +557,10 @@ class _SearchPageState extends State<SearchPage>
 
   displayProgressBar(BuildContext context, DBData dbData) async {
     // 재생중이면 그냥 정지하고 빠져나가게 하기
-    if(_isPlaying == true) {
+    if (_isPlaying == true) {
       _stopPlayRec();
-      return; 
-    }
-
-    else{
+      return;
+    } else {
       pr = new ProgressDialog(context);
       pr.style(message: 'Please wait...');
 
@@ -556,7 +569,6 @@ class _SearchPageState extends State<SearchPage>
         pr.hide();
       });
     }
-    
   }
 
   Future _downloadFile(BuildContext context, DBData dbData) async {
@@ -883,7 +895,6 @@ class _SearchPageState extends State<SearchPage>
       if (_isPlaying == false) {
         return Icon(Icons.play_arrow);
       } else {
-
         return Icon(Icons.stop);
       }
     } else {
