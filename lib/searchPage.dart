@@ -72,8 +72,6 @@ class _SearchPageState extends State<SearchPage>
   void initState() {
     myPhoneNumber =
         Provider.of<UserInfomation>(context, listen: false).details.phoneNumber;
-    // lock.synchronized(getMySentDBData);
-    // lock.synchronized(getMyReceivedDBData);
     ctr = new TabController(vsync: this, length: 2);
 
     FirebaseDatabase firebaseDatabase = FirebaseDatabase.instance;

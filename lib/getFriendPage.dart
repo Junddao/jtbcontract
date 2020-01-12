@@ -5,6 +5,7 @@ import 'package:jtbcontract/data/contactUserInfo.dart';
 import 'package:jtbcontract/data/dbData.dart';
 import 'package:jtbcontract/data/userinfo.dart';
 import 'package:provider/provider.dart';
+import 'package:synchronized/synchronized.dart';
 
 class GetFriendPage extends StatefulWidget {
 
@@ -20,10 +21,12 @@ class _GetFriendPageState extends State<GetFriendPage> {
   List<DBContacts> liContactUserInfo = [];
   ContactUserInfo contactUserInfo = new ContactUserInfo();
 
+   var lock = new Lock();
+
   @override
   void initState() {
     
-    getDBData();
+    //getDBData();
     super.initState();
   }
 
@@ -55,7 +58,7 @@ class _GetFriendPageState extends State<GetFriendPage> {
         backgroundColor: Colors.black,
       ), 
       body: FutureBuilder(
-        future: getDBData(),
+        future: lock.synchronized(getDBData),
         builder: (BuildContext context, AsyncSnapshot snapshot){
           switch(snapshot.connectionState)
           {

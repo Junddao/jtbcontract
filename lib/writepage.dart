@@ -398,7 +398,7 @@ class _WritePageState extends State<WritePage> {
     }
 
     // 앱상에 알람으로 알리기!
-    //await _sendSMS(appName, phoneNumber);
+    await _sendSMS(appName, contactUserInfo.phoneNumber);
   } 
 
   _navigateAndDisplaySelection(BuildContext context) async {
@@ -412,7 +412,7 @@ class _WritePageState extends State<WritePage> {
     await _uploadFile();  // upload voice file.
     
     // SMS 발송하고 
-    //await _sendSMS(appName, phoneNumber);
+    await _sendSMS(appName, contactUserInfo.phoneNumber);
   } 
 
   Future _sendSMS(String message, String recipents) async {

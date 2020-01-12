@@ -46,10 +46,17 @@ dependencies:
   synchronized :
   volume : ^0.1.0
 
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   sms_maintained: ^0.2.5
+
+  flutter_launcher_icons : ^0.7.4
+
+flutter_icons:
+  android: true
+  image_path: "icon/icon.png"
 
 
 

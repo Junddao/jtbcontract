@@ -86,14 +86,15 @@ class _GetContactPageState extends State<GetContactPage> {
         icon: Icon(Icons.open_in_new),
         backgroundColor: Colors.pink,
       ),
-        
+      
       
       appBar: AppBar(
         title: Text('Contact'),
         backgroundColor: Colors.black,
       ),
 
-      body: Column(children: <Widget>[
+      body: Column(
+        children: <Widget>[
         Padding(padding: EdgeInsets.all(5),),
         SizedBox(
           height: 100,

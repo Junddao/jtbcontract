@@ -110,7 +110,6 @@ class AfterSplash extends StatelessWidget {
       ] ,
       child: MaterialApp(
         home: RootPage(),
-        
       )
     );
   }
