@@ -13,7 +13,9 @@ import 'package:jtbcontract/data/approvalCondition.dart';
 import 'package:jtbcontract/data/contactUserInfo.dart';
 import 'package:jtbcontract/getContactsPage.dart';
 import 'package:jtbcontract/getFriendPage.dart';
-import 'package:sms_maintained/sms.dart';
+import 'package:flutter_sms/flutter_sms.dart';
+//import 'package:sms_maintained/sms.dart';
+
 
 import 'dart:io' as io;
 import 'package:path_provider/path_provider.dart';
@@ -398,7 +400,7 @@ class _WritePageState extends State<WritePage> {
     }
 
     // 앱상에 알람으로 알리기!
-    await _sendSMS(appName, contactUserInfo.phoneNumber);
+    await _sendSMS(appName, contactUserInfo.phoneNumber, myName);
   } 
 
   _navigateAndDisplaySelection(BuildContext context) async {
@@ -412,21 +414,32 @@ class _WritePageState extends State<WritePage> {
     await _uploadFile();  // upload voice file.
     
     // SMS 발송하고 
-    await _sendSMS(appName, contactUserInfo.phoneNumber);
+    await _sendSMS(appName, contactUserInfo.phoneNumber, myName);
   } 
 
-  Future _sendSMS(String message, String recipents) async {
-    SmsSender sender = new SmsSender();
-    SmsMessage _message = new SmsMessage(recipents, message);
-    _message.onStateChanged.listen((state) {
-      if (state == SmsMessageState.Sent) {
-        print("SMS is sent!");
-      } else if (state == SmsMessageState.Delivered) {
-        print("SMS is delivered!");
-      }
-    });
-    sender.sendSms(_message);
+  Future<void> _sendSMS(String appName, String number, String nyName) async {
+    String message = appName + "\n\n" + '준태봉약속 앱에서 ' + nyName + '님의 승인 요청이 있습니다..';
+    List<String> recipents = [number];
+    String _result = await FlutterSms
+            .sendSMS(message: message, recipients: recipents)
+            .catchError((onError) {
+          print(onError);
+        });
+    print(_result);
   }
+
+  // Future _sendSMS(String message, String recipents) async {
+  //   SmsSender sender = new SmsSender();
+  //   SmsMessage _message = new SmsMessage(recipents, message);
+  //   _message.onStateChanged.listen((state) {
+  //     if (state == SmsMessageState.Sent) {
+  //       print("SMS is sent!");
+  //     } else if (state == SmsMessageState.Delivered) {
+  //       print("SMS is delivered!");
+  //     }
+  //   });
+  //   sender.sendSms(_message);
+  // }
 
   createAlertDialog(BuildContext context) async {
     return showDialog(

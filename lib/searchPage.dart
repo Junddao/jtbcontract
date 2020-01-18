@@ -59,6 +59,8 @@ class _SearchPageState extends State<SearchPage>
   List<DBData> friendSentData = [];
   List<DBData> friendReceivedData = [];
 
+  int selectedIndex = -1;
+
   String myPhoneNumber;
 
   var contacts;
@@ -103,10 +105,10 @@ class _SearchPageState extends State<SearchPage>
           });
         }
       });
-      setState(() {
-        // lock.synchronized(getMySentDBData);
-        // lock.synchronized(getMyReceivedDBData);
-      });
+      // setState(() {
+      //   // lock.synchronized(getMySentDBData);
+      //   // lock.synchronized(getMyReceivedDBData);
+      // });
     } catch (Exception) {
       print('getStatusStream error');
     }
@@ -596,9 +598,9 @@ class _SearchPageState extends State<SearchPage>
     _isPlaying == false ? _playRec() : _stopPlayRec();
 
     //StorageTaskSnapshot taskSnapshot = await uploadTask.onComplete;
-    setState(() {
-      print("Downloaded.");
-    });
+    // setState(() {
+    //   print("Downloaded.");
+    // });
   }
 
   Future _deleteFile(DBData dbData, int index) async {
@@ -742,19 +744,15 @@ class _SearchPageState extends State<SearchPage>
                   child: new Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          new Text(
-                            dbData.receiverName,
-                            style: TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold),
-                          ),
-                          new Text(
-                            ' (' + dbData.receiverPhoneNumber + ')' + '\n',
-                          ),
-                        ],
+                      new Text(
+                        dbData.receiverName,
+                        style: TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.bold),
                       ),
+                      new Text(
+                        dbData.receiverPhoneNumber + '\n',
+                      ),
+                      
 
                       //new Text('생성일 : '),
                       new Text(
@@ -773,7 +771,7 @@ class _SearchPageState extends State<SearchPage>
                     ? IconButton(
                         icon: sentDataSelectPlayIcon(index),
                         onPressed: () {
-                          sentData[index].isSelected = true;
+                          selectedIndex = index;
                           displayProgressBar(context, dbData);
                         },
                       )
@@ -786,7 +784,7 @@ class _SearchPageState extends State<SearchPage>
                 child: IconButton(
                   icon: Icon(Icons.delete),
                   onPressed: () {
-                    sentData[index].isSelected = true;
+                    selectedIndex = index;
                     _deleteFile(dbData, index);
                   },
                 ),
@@ -840,24 +838,20 @@ class _SearchPageState extends State<SearchPage>
               Expanded(
                 flex: 3,
                 child: new Container(
-                    child: new Padding(
+                  child: new Padding(
                   padding: EdgeInsets.all(3),
                   child: new Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          new Text(
-                            dbData.senderName,
-                            style: TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold),
-                          ),
-                          new Text(
-                            ' (' + dbData.senderPhoneNumber + ')' + '\n',
-                          ),
-                        ],
+                      new Text(
+                        dbData.senderName ,
+                        style: TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.bold),
                       ),
+                      new Text(
+                        dbData.senderPhoneNumber + '\n',
+                      ),
+                       
                       new Text(
                         dbData.date.toString(),
                         style: TextStyle(color: Colors.grey),
@@ -873,7 +867,7 @@ class _SearchPageState extends State<SearchPage>
                       ? IconButton(
                           icon: receivedDataSelectPlayIcon(index),
                           onPressed: () {
-                            receivedData[index].isSelected = true;
+                            selectedIndex = index;
                             displayProgressBar(context, dbData);
                           },
                         )
@@ -888,8 +882,8 @@ class _SearchPageState extends State<SearchPage>
   }
 
   Icon sentDataSelectPlayIcon(int index) {
-    if (sentData[index].isSelected) {
-      sentData[index].isSelected = false;
+    if (index == selectedIndex) {
+      selectedIndex = -1;
       if (_isPlaying == false) {
         return Icon(Icons.play_arrow);
       } else {
@@ -901,8 +895,8 @@ class _SearchPageState extends State<SearchPage>
   }
 
   Icon receivedDataSelectPlayIcon(int index) {
-    if (receivedData[index].isSelected) {
-      receivedData[index].isSelected = false;
+    if (index == selectedIndex) {
+      selectedIndex = -1;
       if (_isPlaying == false) {
         return Icon(Icons.play_arrow);
       } else {
