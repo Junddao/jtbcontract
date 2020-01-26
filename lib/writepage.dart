@@ -100,9 +100,9 @@ class _WritePageState extends State<WritePage> {
               margin: EdgeInsets.only(left: 20.0, right: 20.0),
               padding: EdgeInsets.all(20),
               child: Marquee(
-                child : Text('한국 민법에서는 별도의 형식을 요구하지 않고, 당사자간의 약정(합의)만으로 계약의 성립을 인정하는 낙성 불요식 계약 원칙을 따르고 있습니다. 계약 당사자가 계약 내용에 대해서 동의했다는 사실을 증명할 수 있으면 그 형태가 무엇이든 법적 효력이 인정됩니다.'),
+                child : Text('## 한국 민법에서는 별도의 형식을 요구하지 않고, 당사자간의 약정(합의)만으로 계약의 성립을 인정하는 낙성 불요식 계약 원칙을 따르고 있습니다. 계약 당사자가 계약 내용에 대해서 동의했다는 사실을 증명할 수 있으면 그 형태가 무엇이든 법적 효력이 인정됩니다. ##'),
                 animationDuration: Duration(seconds: 20),
-                pauseDuration: Duration(milliseconds: 2000),
+                pauseDuration: Duration(milliseconds: 100),
                 directionMarguee: DirectionMarguee.oneDirection,
                 
               ),

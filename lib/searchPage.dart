@@ -8,6 +8,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:intl/intl.dart';
 import 'package:jtbcontract/data/approvalCondition.dart';
 import 'package:jtbcontract/data/dbData.dart';
 import 'package:jtbcontract/data/userinfo.dart';
@@ -85,6 +86,7 @@ class _SearchPageState extends State<SearchPage>
     getStatusStream(itemSenderRef, _updatedStatus)
         .then((StreamSubscription s) => _subscriptionStatus = s);
 
+
     super.initState();
   }
 
@@ -143,6 +145,26 @@ class _SearchPageState extends State<SearchPage>
     super.dispose();
   }
 
+
+  Future removeRejectedSentData() async{
+    DateTime now = DateTime.now();
+    // String formattedDate  = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+
+    int index = 0;
+
+    for(DBData d in sentData){
+      if(d.status == ApprovalCondition.reject){
+        DateTime sentDate = DateTime.parse(d.date);
+        int diffDays = now.difference(sentDate).inDays; 
+        if(diffDays > 3){   // 작성한지 3일지나고 거절된 메시지는 바로 삭제한다.
+          // DB 삭제
+          await deleteDBData(index);
+        }
+      }
+      index = index + 1;
+    }
+  }
+
   Future<List<DBData>> getMySentDBData() async {
     DatabaseReference ref = FirebaseDatabase.instance.reference();
     try{
@@ -170,9 +192,13 @@ class _SearchPageState extends State<SearchPage>
           }
         }
       });
+      sentData.sort((a,b) => a.date.compareTo(b.date));
     }
     catch(Exception) {
       print('sent db error');
+    }
+    finally{
+      removeRejectedSentData();
     }
     
     return sentData;
@@ -206,6 +232,7 @@ class _SearchPageState extends State<SearchPage>
               }
             }
           });
+          receivedData.sort((a,b) => a.date.compareTo(b.date));
     }
     catch(Exception) {
       print('received db error');
@@ -213,6 +240,7 @@ class _SearchPageState extends State<SearchPage>
     return receivedData;
     
   }
+
 
   Future getFriendDBData(String friendPhoneNumber) async {
     DatabaseReference ref = FirebaseDatabase.instance.reference();
@@ -242,6 +270,7 @@ class _SearchPageState extends State<SearchPage>
           }
         }
       });
+      friendSentData.sort((a,b) => a.date.compareTo(b.date));
     } catch (Exception) {
       print('error');
     }
@@ -273,6 +302,7 @@ class _SearchPageState extends State<SearchPage>
           print('length : ${friendReceivedData.length}');
         });
       });
+      friendReceivedData.sort((a,b) => a.date.compareTo(b.date));
     } catch (Exception) {
       print('error');
     }
