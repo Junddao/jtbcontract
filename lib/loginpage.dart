@@ -45,7 +45,7 @@ class _LoginPageState extends State<LoginPage> {
       userDetails.displayName,
       userDetails.photoUrl,
       userDetails.email,
-      _info.line1Number,
+      _info.line1Number.replaceAll('+86', ''),
     );
 
     Provider. of<UserInfomation>(context).details = details;

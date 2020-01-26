@@ -14,6 +14,7 @@ import 'package:jtbcontract/data/contactUserInfo.dart';
 import 'package:jtbcontract/getContactsPage.dart';
 import 'package:jtbcontract/getFriendPage.dart';
 import 'package:flutter_sms/flutter_sms.dart';
+import 'package:marquee_widget/marquee_widget.dart';
 //import 'package:sms_maintained/sms.dart';
 
 
@@ -95,6 +96,19 @@ class _WritePageState extends State<WritePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            Container(
+              margin: EdgeInsets.only(left: 20.0, right: 20.0),
+              padding: EdgeInsets.all(20),
+              child: Marquee(
+                child : Text('한국 민법에서는 별도의 형식을 요구하지 않고, 당사자간의 약정(합의)만으로 계약의 성립을 인정하는 낙성 불요식 계약 원칙을 따르고 있습니다. 계약 당사자가 계약 내용에 대해서 동의했다는 사실을 증명할 수 있으면 그 형태가 무엇이든 법적 효력이 인정됩니다.'),
+                animationDuration: Duration(seconds: 20),
+                pauseDuration: Duration(milliseconds: 2000),
+                directionMarguee: DirectionMarguee.oneDirection,
+                
+              ),
+            ),
+            
+            
             Expanded(
               flex: 10,
               child: CircleAvatar(
@@ -122,8 +136,8 @@ class _WritePageState extends State<WritePage> {
                 ),
               ),
             ),
-            Expanded(
-              flex: 1,
+            SizedBox(
+              height: 40,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
@@ -142,9 +156,11 @@ class _WritePageState extends State<WritePage> {
                         ],
                       ),
                       onPressed: () {
-                        setState(() {
+                          if(_isRecording){
+                            voiceRecordStop();
+                          } 
                           _deleteRec();
-                        });
+                          setState(() {});
                       },
                     ),
                   ),
@@ -283,7 +299,6 @@ class _WritePageState extends State<WritePage> {
     print("Stop recording: ${recording.path}");
     bool isRecording = await AudioRecorder.isRecording;
     File file = widget.localFileSystem.file(recording.path);
-    print("  File length: ${await file.length()}");
     setState(() {
       _recording = recording;
       _isRecording = isRecording;
@@ -427,19 +442,6 @@ class _WritePageState extends State<WritePage> {
         });
     print(_result);
   }
-
-  // Future _sendSMS(String message, String recipents) async {
-  //   SmsSender sender = new SmsSender();
-  //   SmsMessage _message = new SmsMessage(recipents, message);
-  //   _message.onStateChanged.listen((state) {
-  //     if (state == SmsMessageState.Sent) {
-  //       print("SMS is sent!");
-  //     } else if (state == SmsMessageState.Delivered) {
-  //       print("SMS is delivered!");
-  //     }
-  //   });
-  //   sender.sendSms(_message);
-  // }
 
   createAlertDialog(BuildContext context) async {
     return showDialog(

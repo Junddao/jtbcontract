@@ -91,7 +91,6 @@ class _MyAppState extends State<MyApp>{
       //   color: Colors.white
       // ),
       photoSize: 100.0,
-      onClick: ()=>print("Flutter Egypt"),
       loaderColor: Colors.white,
       //loadingText: Text('Now Loading'),
     );

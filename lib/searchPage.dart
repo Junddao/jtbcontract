@@ -818,7 +818,7 @@ class _SearchPageState extends State<SearchPage>
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15.0),
         ),
-        elevation: 20,
+        elevation: 2,
         child: Padding(
           padding: EdgeInsets.all(10),
           child: Row(

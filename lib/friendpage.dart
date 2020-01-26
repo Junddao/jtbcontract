@@ -177,7 +177,6 @@ class _FreindPageState extends State<FreindPage> {
                 color: Colors.blue,
                 child: Text('친구 삭제하기'),
                 onPressed: () {
-                  
                   deleteFriend(context, index);
                   
                 },

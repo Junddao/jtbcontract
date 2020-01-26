@@ -52,8 +52,8 @@ android {
         versionName flutterVersionName
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
-        versionCode 9
-        versionName "1.4.4"
+        versionCode 10
+        versionName "1.4.5"
     }
     signingConfigs {
        release {
