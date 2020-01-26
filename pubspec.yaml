@@ -25,9 +25,9 @@ dependencies:
   cupertino_icons: ^0.1.2
   splashscreen: ^1.2.0
   provider: ^3.0.0+1
-  permission_handler: ^3.3.0
+  permission_handler: '^4.2.0+hotfix.1'
   firebase_core : ^0.4.0+9
-  google_sign_in: ^4.0.7
+  google_sign_in: ^4.1.1
   firebase_auth: ^0.14.0+5
   font_awesome_flutter: ^8.5.0
   file: ^5.1.0
@@ -51,7 +51,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  sms_maintained: ^0.2.5
+  # sms_maintained: ^0.2.5
 
   flutter_launcher_icons : ^0.7.4
 
