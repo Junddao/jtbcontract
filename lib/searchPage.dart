@@ -161,6 +161,14 @@ class _SearchPageState extends State<SearchPage>
           await deleteDBData(index);
         }
       }
+      else{
+        DateTime sentDate = DateTime.parse(d.date);
+        int diffDays = now.difference(sentDate).inDays; 
+        if(diffDays > 30){   // 작성한지 30일지난 메시지는 삭제한다.
+          // DB 삭제
+          await deleteDBData(index);
+        }
+      }
       index = index + 1;
     }
   }

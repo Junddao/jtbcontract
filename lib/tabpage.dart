@@ -18,7 +18,7 @@ class _TabPageState extends State<TabPage> {
     WritePage(),
     SearchPage(),
     FreindPage(),
-    AccountPage()
+    //AccountPage()
   ];
 
   @override
@@ -83,12 +83,10 @@ class _TabPageState extends State<TabPage> {
                       BottomNavigationBarItem(
                           icon: Icon(Icons.group),
                           title: Text('친구')), // 내 계정 확인, 작성 문서찾기
-                      BottomNavigationBarItem(
-                          icon: Icon(Icons.supervised_user_circle),
-                          title: Text('내계정')), // 내 계정 확인, 작성 문서찾기
                       // BottomNavigationBarItem(
-                      //     icon: Icon(Icons.account_circle),
-                      //     title: Text('계정')), // 내 계정 확인, 작성 문서찾기
+                      //     icon: Icon(Icons.supervised_user_circle),
+                      //     title: Text('내계정')), // 내 계정 확인, 작성 문서찾기
+                     
                     ]))));
   }
 
@@ -98,7 +96,7 @@ class _TabPageState extends State<TabPage> {
     if(Provider.of<TabStates>(context).selectedIndex == 0) titleText = '녹음';
     if(Provider.of<TabStates>(context).selectedIndex == 1) titleText = '찾기';
     if(Provider.of<TabStates>(context).selectedIndex == 2) titleText = '친구';
-    if(Provider.of<TabStates>(context).selectedIndex == 3) titleText = '내계정';
+    //if(Provider.of<TabStates>(context).selectedIndex == 3) titleText = '내계정';
     
     return Text(
       titleText,

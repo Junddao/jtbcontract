@@ -102,7 +102,7 @@ class _WritePageState extends State<WritePage> {
               child: Marquee(
                 child : Text('## 한국 민법에서는 별도의 형식을 요구하지 않고, 당사자간의 약정(합의)만으로 계약의 성립을 인정하는 낙성 불요식 계약 원칙을 따르고 있습니다. 계약 당사자가 계약 내용에 대해서 동의했다는 사실을 증명할 수 있으면 그 형태가 무엇이든 법적 효력이 인정됩니다. ##'),
                 animationDuration: Duration(seconds: 20),
-                pauseDuration: Duration(milliseconds: 100),
+                pauseDuration: Duration(milliseconds: 1000),
                 directionMarguee: DirectionMarguee.oneDirection,
                 
               ),
@@ -208,7 +208,20 @@ class _WritePageState extends State<WritePage> {
 
       await createAlertDialog(context);
       
-      String maker = contactUserInfo.name;
+      // await createSnackBar();
+     
+
+      //보내고 난 후에는 다시 녹음하게 만들기.
+      _hasRecFile = false;
+    }
+    catch(Exception){
+      print('phoneNumber is null');
+    }
+    
+  }
+
+  Future createSnackBar() async{
+    String maker = contactUserInfo.name;
       if(contactUserInfo.name.isEmpty) maker = contactUserInfo.phoneNumber;
       
       if(contactUserInfo.phoneNumber != null){
@@ -217,11 +230,6 @@ class _WritePageState extends State<WritePage> {
         ..showSnackBar(SnackBar(content: Text(maker + '님께 요청 메세지를 발송했습니다.')));
         print(contactUserInfo.phoneNumber);
       }
-    }
-    catch(Exception){
-      print('phoneNumber is null');
-    }
-    
   }
 
   voiceRecordStart() {
@@ -443,7 +451,7 @@ class _WritePageState extends State<WritePage> {
     print(_result);
   }
 
-  createAlertDialog(BuildContext context) async {
+  Future createAlertDialog(BuildContext context) async {
     return showDialog(
       context: context,
       builder: (context) {

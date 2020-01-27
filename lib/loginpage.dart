@@ -15,13 +15,12 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   TelephonyInfo _info;
 
-  GoogleSignIn _googleSignIn = new GoogleSignIn(
-    scopes: <String>[
-      'email',
-      'https://www.googleapis.com/auth/contacts.readonly',
-    ],
-  );
+  GoogleSignIn _googleSignIn = new GoogleSignIn();
 
+// scopes: <String>[
+//       'email',
+//       '',
+//     ],
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn googleSignIn = new GoogleSignIn();
   bool isLogin = false;
