@@ -4,8 +4,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:jtbcontract/data/userinfo.dart';
 import 'package:jtbcontract/tabpage.dart';
+import 'package:mobile_number/mobile_number.dart';
 import 'package:provider/provider.dart';
-import 'package:flt_telephony_info/flt_telephony_info.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -13,7 +13,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  TelephonyInfo _info;
+  String mobileNumber;
 
   GoogleSignIn _googleSignIn = new GoogleSignIn();
 
@@ -38,34 +38,21 @@ class _LoginPageState extends State<LoginPage> {
     final FirebaseUser userDetails =
         (await _auth.signInWithCredential(credential)).user;
 
-    await getTelephonyInfo();
+    mobileNumber = await MobileNumber.mobileNumber;
     UserInfoDetails details = new UserInfoDetails(
       userDetails.providerId,
       userDetails.displayName,
       userDetails.photoUrl,
       userDetails.email,
-      _info.line1Number.replaceAll('+86', ''),
+      mobileNumber,
     );
 
     Provider. of<UserInfomation>(context).details = details;
     Navigator.of(context)
             .pushAndRemoveUntil(MaterialPageRoute(builder: (BuildContext context) => TabPage()),(Route<dynamic> route) => false);
-    // Navigator.of(context)
-    //     .push(MaterialPageRoute(builder: (context) => TabPage()));
+
   }
 
-  Future<void> getTelephonyInfo() async {
-    TelephonyInfo info;
-    try {
-      info = await FltTelephonyInfo.info;
-    } catch (Exception) {}
-
-    if (!mounted) return;
-
-    setState(() {
-      _info = info;
-    });
-  }
 
   @override
   void initState() {

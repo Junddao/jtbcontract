@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:jtbcontract/accountpage.dart';
 import 'package:jtbcontract/friendpage.dart';
 import 'package:jtbcontract/searchPage.dart';
 import 'package:jtbcontract/writepage.dart';
+import 'package:jtbcontract/writepage2.dart';
 import 'package:provider/provider.dart';
 import 'data/tabstates.dart';
 
@@ -15,10 +15,11 @@ class TabPage extends StatefulWidget {
 
 class _TabPageState extends State<TabPage> {
   final List<Widget> _tabs = [
-    WritePage(),
+    //WritePage(),
+    WritePage2(),
     SearchPage(),
     FreindPage(),
-    //AccountPage()
+    AccountPage(),
   ];
 
   @override
@@ -74,18 +75,21 @@ class _TabPageState extends State<TabPage> {
                     type: BottomNavigationBarType.fixed,
                     currentIndex: value.selectedIndex,
                     items: <BottomNavigationBarItem>[
+                      // BottomNavigationBarItem(
+                      //     icon: Icon(Icons.mic),
+                      //     title: Text('녹음')), // 뭘 보여줘야 할까...
                       BottomNavigationBarItem(
                           icon: Icon(Icons.mic),
-                          title: Text('녹음')), // 뭘 보여줘야 할까...
+                          title: Text('작성')), // 
                       BottomNavigationBarItem(
                           icon: Icon(Icons.search),
                           title: Text('찾기')), // 계약서 작성 페이지
                       BottomNavigationBarItem(
                           icon: Icon(Icons.group),
                           title: Text('친구')), // 내 계정 확인, 작성 문서찾기
-                      // BottomNavigationBarItem(
-                      //     icon: Icon(Icons.supervised_user_circle),
-                      //     title: Text('내계정')), // 내 계정 확인, 작성 문서찾기
+                      BottomNavigationBarItem(
+                          icon: Icon(Icons.supervised_user_circle),
+                          title: Text('내계정')), // 내 계정 확인, 작성 문서찾기
                      
                     ]))));
   }
@@ -93,10 +97,11 @@ class _TabPageState extends State<TabPage> {
   Text getTitleText(){
     String titleText;
     
-    if(Provider.of<TabStates>(context).selectedIndex == 0) titleText = '녹음';
+    // if(Provider.of<TabStates>(context).selectedIndex == 0) titleText = '녹음';
+    if(Provider.of<TabStates>(context).selectedIndex == 0) titleText = '작성';
     if(Provider.of<TabStates>(context).selectedIndex == 1) titleText = '찾기';
     if(Provider.of<TabStates>(context).selectedIndex == 2) titleText = '친구';
-    //if(Provider.of<TabStates>(context).selectedIndex == 3) titleText = '내계정';
+    if(Provider.of<TabStates>(context).selectedIndex == 3) titleText = '내계정';
     
     return Text(
       titleText,
