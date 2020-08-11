@@ -95,7 +95,7 @@ class _FreindPageState extends State<FreindPage> {
           });
           
         },
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.red,
         foregroundColor: Colors.white,
         child: Icon(Icons.plus_one),
       ),
