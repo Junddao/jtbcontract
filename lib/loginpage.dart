@@ -1,11 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:jtbcontract/data/userinfo.dart';
 import 'package:jtbcontract/tabpage.dart';
+import 'package:mobile_number/mobile_number.dart';
 import 'package:provider/provider.dart';
-import 'package:flt_telephony_info/flt_telephony_info.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -13,7 +14,8 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  TelephonyInfo _info;
+  String _mobileNumber = '';
+  List<SimCard> _simCard;
 
   GoogleSignIn _googleSignIn = new GoogleSignIn();
 
@@ -38,42 +40,66 @@ class _LoginPageState extends State<LoginPage> {
     final FirebaseUser userDetails =
         (await _auth.signInWithCredential(credential)).user;
 
-    await getTelephonyInfo();
     UserInfoDetails details = new UserInfoDetails(
       userDetails.providerId,
       userDetails.displayName,
       userDetails.photoUrl,
       userDetails.email,
-      _info.line1Number.replaceAll('+86', ''),
+      _mobileNumber,
     );
 
-    Provider. of<UserInfomation>(context).details = details;
-    Navigator.of(context)
-            .pushAndRemoveUntil(MaterialPageRoute(builder: (BuildContext context) => TabPage()),(Route<dynamic> route) => false);
+    Provider.of<UserInfomation>(context).details = details;
+    Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (BuildContext context) => TabPage()),
+        (Route<dynamic> route) => false);
     // Navigator.of(context)
     //     .push(MaterialPageRoute(builder: (context) => TabPage()));
   }
 
-  Future<void> getTelephonyInfo() async {
-    TelephonyInfo info;
-    try {
-      info = await FltTelephonyInfo.info;
-    } catch (Exception) {}
+  @override
+  void initState() {
+    super.initState();
+    MobileNumber.listenPhonePermission((isPermissionGranted) {
+      if (isPermissionGranted) {
+        initMobileNumberState();
+      } else {}
+    });
 
+    initMobileNumberState();
+  }
+
+  // Platform messages are asynchronous, so we initialize in an async method.
+  Future<void> initMobileNumberState() async {
+    if (!await MobileNumber.hasPhonePermission) {
+      await MobileNumber.requestPhonePermission;
+      return;
+    }
+    String mobileNumber = '';
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    try {
+      mobileNumber = await MobileNumber.mobileNumber;
+      _simCard = await MobileNumber.getSimCards;
+    } on PlatformException catch (e) {
+      debugPrint("Failed to get mobile number because of '${e.message}'");
+    }
+
+    // If the widget was removed from the tree while the asynchronous platform
+    // message was in flight, we want to discard the reply rather than calling
+    // setState to update our non-existent appearance.
     if (!mounted) return;
 
     setState(() {
-      _info = info;
+      _mobileNumber = mobileNumber;
     });
   }
 
-  @override
-  void initState() {
-   
-    super.initState();
-    
+  Widget fillCards() {
+    List<Widget> widgets = _simCard
+        .map((SimCard sim) => Text(
+            'Sim Card Number: (${sim.countryPhonePrefix}) - ${sim.number}\nCarrier Name: ${sim.carrierName}\nCountry Iso: ${sim.countryIso}\nDisplay Name: ${sim.displayName}\nSim Slot Index: ${sim.slotIndex}\n\n'))
+        .toList();
+    return Column(children: widgets);
   }
-
 
   @override
   Widget build(BuildContext context) {

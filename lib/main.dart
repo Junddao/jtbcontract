@@ -7,83 +7,70 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:splashscreen/splashscreen.dart';
 
-void main(){
-  runApp(
-    new MaterialApp(
-      home : MyApp(),
-      //onGenerateRoute: generateRoute,
-      //initialRoute: RootPageRoute,
-    )
-  );
+void main() {
+  runApp(new MaterialApp(
+    home: MyApp(),
+    //onGenerateRoute: generateRoute,
+    //initialRoute: RootPageRoute,
+  ));
 }
 
-class MyApp extends StatefulWidget{
+class MyApp extends StatefulWidget {
   @override
   _MyAppState createState() => new _MyAppState();
 }
 
-class _MyAppState extends State<MyApp>{
-
+class _MyAppState extends State<MyApp> {
   String textValue = 'Hello World';
   FirebaseMessaging firebaseMessaging = new FirebaseMessaging();
-  
 
   @override
   void initState() {
-    firebaseMessaging.configure(
-      onLaunch: (Map<String, dynamic> msg){
-        print('onlaunch');
-
-      },
-      onResume: (Map<String, dynamic> msg){
-        print('onResume');
-
-      },
-      onMessage: (Map<String, dynamic> msg){
-        print('onMessage');
-
-      }
-    );
-    firebaseMessaging.requestNotificationPermissions(
-      const IosNotificationSettings(
-        sound: true,
-        alert: true,
-        badge: true,
-      )
-    );
-    firebaseMessaging.onIosSettingsRegistered.listen((IosNotificationSettings setting){
+    firebaseMessaging.configure(onLaunch: (Map<String, dynamic> msg) {
+      print('onlaunch');
+    }, onResume: (Map<String, dynamic> msg) {
+      print('onResume');
+    }, onMessage: (Map<String, dynamic> msg) {
+      print('onMessage');
+    });
+    firebaseMessaging
+        .requestNotificationPermissions(const IosNotificationSettings(
+      sound: true,
+      alert: true,
+      badge: true,
+    ));
+    firebaseMessaging.onIosSettingsRegistered
+        .listen((IosNotificationSettings setting) {
       print('IOS setting');
     });
-    firebaseMessaging.getToken().then((token){
+    firebaseMessaging.getToken().then((token) {
       update(token);
     });
     super.initState();
   }
 
-  
-  update(String token){
+  update(String token) {
     print(token);
-  
+
     textValue = token;
-    setState(() {
-      
-    });  
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-
     return new SplashScreen(
       seconds: 3,
       navigateAfterSeconds: new AfterSplash(),
-      title: new Text('J T B',
-      style: new TextStyle(
-        fontWeight: FontWeight.bold,
-        fontSize: 24.0,
-        color: Colors.black,
-      ),), 
+      title: new Text(
+        'J T B',
+        style: new TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 24.0,
+          color: Colors.black,
+        ),
+      ),
       //image: new Image.network('https://i.imgur.com/TyCSG9A.png'),
-      
+
       backgroundColor: Colors.white,
       // styleTextUnderTheLoader: new TextStyle(
       //   fontSize: 12.0,
@@ -98,19 +85,21 @@ class _MyAppState extends State<MyApp>{
 }
 
 class AfterSplash extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
     permission();
     return MultiProvider(
-      providers: [
-        ChangeNotifierProvider<UserInfomation>( builder : (context) => UserInfomation(),),
-        ChangeNotifierProvider<TabStates> (builder : (context) => TabStates(),),
-      ] ,
-      child: MaterialApp(
-        home: RootPage(),
-      )
-    );
+        providers: [
+          ChangeNotifierProvider<UserInfomation>(
+            builder: (context) => UserInfomation(),
+          ),
+          ChangeNotifierProvider<TabStates>(
+            builder: (context) => TabStates(),
+          ),
+        ],
+        child: MaterialApp(
+          home: RootPage(),
+        ));
   }
 
   void permission() async {
@@ -119,8 +108,5 @@ class AfterSplash extends StatelessWidget {
     await PermissionHandler().requestPermissions([PermissionGroup.contacts]);
     await PermissionHandler().requestPermissions([PermissionGroup.phone]);
     //await PermissionHandler().requestPermissions([PermissionGroup.sms]);
-   
   }
 }
-
-  

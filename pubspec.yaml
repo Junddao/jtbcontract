@@ -26,45 +26,41 @@ dependencies:
   splashscreen: ^1.2.0
   provider: ^3.0.0+1
   permission_handler: '^4.2.0+hotfix.1'
-  firebase_core : ^0.4.0+9
+  firebase_core: ^0.4.0+9
   google_sign_in: ^4.1.1
   firebase_auth: ^0.14.0+5
   font_awesome_flutter: ^8.5.0
   file: ^5.1.0
-  path_provider : ^1.4.0
+  path_provider: ^1.4.0
   intl: ^0.16.0
-  audioplayers : ^0.13.5
-  firebase_storage :
-  firebase_database :
-  contacts_service : 
-  flt_telephony_info :
-  audio_recorder: ^1.0.1
-  http :
-  firebase_messaging : 
-  cloud_firestore:
-  progress_dialog:
-  synchronized :
-  volume : ^0.1.0
+  audioplayers: ^0.13.5
+  firebase_storage: null
+  firebase_database: null
+  contacts_service: null
+
+  http: null
+  firebase_messaging: null
+  cloud_firestore: null
+  progress_dialog: null
+  synchronized: null
+  volume: ^0.1.0
   flutter_sms: ^1.1.0
   marquee_widget: ^0.8.0
-
+  audio_recorder: ^1.0.2
+  mobile_number: ^1.0.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   # sms_maintained: ^0.2.5
-
-  flutter_launcher_icons : ^0.7.4
+  flutter_launcher_icons: ^0.7.4
 
 flutter_icons:
   android: true
   image_path: "icon/icon.png"
 
-
-
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
-
 # The following section is specific to Flutter.
 flutter:
 
@@ -80,13 +76,10 @@ flutter:
   assets:
     - images/loginImage.jpg
     - images/loginImage.png
-
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
-
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/assets-and-images/#from-packages
-
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a
   # "family" key with the font family name, and a "fonts" key with a
@@ -106,3 +99,4 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+
