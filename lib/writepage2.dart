@@ -40,24 +40,13 @@ class _WritePageState extends State<WritePage2> {
 
   String myPhoneNumber;
   String myName;
+  String contents;
 
-  Recording _recording = new Recording();
-  AudioPlayer audioPlayer = AudioPlayer();
 
   Random random = new Random();
-  TextEditingController _controller = new TextEditingController();
-  bool _isRecording = false; // 녹음 파일 유무 확인
-  bool _isPlaying = false;
-  bool _hasRecFile = false;
-  bool hasFile = false;
-  int fileNum = 0;
-  io.Directory appDocDirectory;
-  
-  ContactUserInfo contactUserInfo;
-  String audioPath;
-  List liRecFiles = new List();
+  TextEditingController _textController = new TextEditingController();
 
-  StreamSubscription _playerCompleteSubscription;
+  ContactUserInfo contactUserInfo;
 
   @override
   void initState() {
@@ -76,57 +65,62 @@ class _WritePageState extends State<WritePage2> {
 
   @override
   void dispose() {
-    _playerCompleteSubscription?.cancel();
-    _controller.dispose();
+    _textController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     
-    _playerCompleteSubscription = audioPlayer.onPlayerCompletion.listen((msg){
-      _onComplete();
-      setState(() {});
-    });
+    
     return Scaffold(
       body: Container(
         alignment: Alignment.center,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Container(
-              margin: EdgeInsets.only(left: 20.0, right: 20.0),
-              padding: EdgeInsets.all(20),
-              child: Marquee(
-                child : Text('## 한국 민법에서는 별도의 형식을 요구하지 않고, 당사자간의 약정(합의)만으로 계약의 성립을 인정하는 낙성 불요식 계약 원칙을 따르고 있습니다. 계약 당사자가 계약 내용에 대해서 동의했다는 사실을 증명할 수 있으면 그 형태가 무엇이든 법적 효력이 인정됩니다. ##'),
-                animationDuration: Duration(seconds: 20),
-                pauseDuration: Duration(milliseconds: 1000),
-                directionMarguee: DirectionMarguee.oneDirection,
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[
+                Container(
+                  margin: EdgeInsets.only(left: 20.0, right: 20.0),
+                  padding: EdgeInsets.all(20),
+                  child : Text(' 상대방 동의시 증거로 효력 있음.  '),
+                  // child: Marquee(
+                  //   // child : Text('## 한국 민법에서는 별도의 형식을 요구하지 않고, 당사자간의 약정(합의)만으로 계약의 성립을 인정하는 낙성 불요식 계약 원칙을 따르고 있습니다. 계약 당사자가 계약 내용에 대해서 동의했다는 사실을 증명할 수 있으면 그 형태가 무엇이든 법적 효력이 인정됩니다. ##'),
+                    
+                  //   animationDuration: Duration(seconds: 20),
+                  //   pauseDuration: Duration(milliseconds: 1000),
+                  //   directionMarguee: DirectionMarguee.oneDirection,
+                    
+                  // ),
+                ),
                 
-              ),
-            ),
-            
-            
-            Expanded(
-              flex: 10,
-              child: Scrollbar(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.vertical,
-                  reverse: true,
-                  child: SizedBox(
-                    height: 200.0,
-                    child: new TextField(
-                      maxLines: 10,
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        hintText: '내용을 작성하세요.'
+                
+                Scrollbar(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      reverse: true,
+                      child: Padding(
+                        padding: EdgeInsets.all(10),
+                        child: SizedBox(
+                          height: 200,
+                          child: new TextField(
+                            controller: _textController,
+                            onSubmitted: _handleSubmitted,
+                            maxLines: 10,
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(),
+                              hintText: '내용을 작성하세요. '
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                  )
-                ),
-
-              ),
+                  ),
+              ],
             ),
+
             SizedBox(
               height: 40,
               child: Row(
@@ -146,9 +140,7 @@ class _WritePageState extends State<WritePage2> {
                           Text("다시 작성하기"),
                         ],
                       ),
-                      onPressed: () {
-                          setState(() {});
-                      },
+                      onPressed: () => _handleSubmitted(_textController.text),
                     ),
                   ),
                 
@@ -168,12 +160,12 @@ class _WritePageState extends State<WritePage2> {
                         ],
                       ),
                       onPressed: () {
-                        if (_hasRecFile) {
+                        if (_textController.text.length > 0) {
                           _createAlertDialog(context);
-                          
+                          // _handleSubmitted(_textController.text);
                         } else {
                           SnackBar alertSnackbar = SnackBar(
-                            content: Text('Recording First.'),
+                            content: Text('내용을 작성하세요.'),
                           );
                           Scaffold.of(context).showSnackBar(alertSnackbar);
                         }
@@ -188,18 +180,18 @@ class _WritePageState extends State<WritePage2> {
       ),
     );
   }
+  void _handleSubmitted(String text) {
+    _textController.clear(); 
+  }
 
   _createAlertDialog(BuildContext context) async{
     try{
       contactUserInfo = new ContactUserInfo();
 
       await createAlertDialog(context);
-      
-      // await createSnackBar();
-     
 
-      //보내고 난 후에는 다시 녹음하게 만들기.
-      _hasRecFile = false;
+      // //보내고 난 후에는 내용 지우기
+      _textController.text = '';
     }
     catch(Exception){
       print('phoneNumber is null');
@@ -219,143 +211,20 @@ class _WritePageState extends State<WritePage2> {
       }
   }
 
-  voiceRecordStart() {
-    _isRecording ? null : _start();
-    // _isMicPushed = true;
-  }
-
-  voiceRecordStop() {
-    _isRecording ? _stop() : null;
-    // _isMicPushed = false;
-  }
-
-  
-  _playRec() async {
-    print("Search recording file : " + audioPath);
-
-    try {
-      io.File fiRec = io.File(audioPath);
-      if (fiRec.existsSync()) {
-        int result = await audioPlayer.play(audioPath, isLocal: true);
-        if (result == 1) {
-          _isPlaying = true;
-          print("Success");
-        } else {
-          print("Fail");
-        }
-        setState(() {});
-      }
-    } catch (Exception) {}
-  }
-
-  _stopPlayRec() async {
-    print("Search recording file : " + audioPath);
-
-    try {
-      int result = await audioPlayer.stop();
-      if (result == 1) {
-        _isPlaying = false;
-        print("Success");
-      } else {
-        print("Fail");
-      }
-      setState(() {});
-    } catch (Exception) {}
-  }
-
-  _start() async {
-    try {
-      if (await AudioRecorder.hasPermissions) {
-        appDocDirectory = await getApplicationDocumentsDirectory();
-        var now = DateTime.now();
-        String formattedDate = DateFormat('yyyyMMddhhmmss').format(now);
-        String path = appDocDirectory.path + '/' + formattedDate + ".m4a";
-        audioPath = path;
-        print("Start recording: $path");
-        await AudioRecorder.start(
-            path: path, audioOutputFormat: AudioOutputFormat.AAC);
-
-        bool isRecording = await AudioRecorder.isRecording;
-        setState(() {
-          _recording = new Recording(duration: new Duration(), path: "");
-          _isRecording = isRecording;
-        });
-      } else {
-        Scaffold.of(context).showSnackBar(
-            new SnackBar(content: new Text("You must accept permissions")));
-      }
-    } catch (e) {
-      print(e);
-    }
-  }
-
-  _stop() async {
-    var recording = await AudioRecorder.stop();
-    print("Stop recording: ${recording.path}");
-    bool isRecording = await AudioRecorder.isRecording;
-    File file = widget.localFileSystem.file(recording.path);
-    setState(() {
-      _recording = recording;
-      _isRecording = isRecording;
-      _search();
-    });
-    _controller.text = recording.path;
-  }
-
-  _search() async {
-    print("Search recording file : " + appDocDirectory.path);
-
-    try {
-      String directory = appDocDirectory.path;
-      liRecFiles = io.Directory("$directory/").listSync();
-      if (liRecFiles.length > 0) {
-        _hasRecFile = true;
-      } else {
-        _hasRecFile = false;
-      }
-    } catch (Exception) {}
-  }
-
-  _deleteRec() async {
-    print("Delete recording dir : " + appDocDirectory.path);
-
-    try {
-      String directory = appDocDirectory.path;
-      io.Directory diRec = io.Directory("$directory/");
-      if (diRec.existsSync()) {
-        diRec.deleteSync(recursive: true);
-        _hasRecFile = false;
-      }
-    } catch (Exception) {}
-  }
-
  
     // FirebaseStorage _storage = FirebaseStorage(storageBucket: 'gs://jtbcontract.appspot.com');
   Future _uploadFile() async {
-    File file = widget.localFileSystem.file(audioPath);
-    
-   
+
     String friendNumber = contactUserInfo.phoneNumber;
     String freindName = contactUserInfo.name;
 
-    String savedPath =
-        '/' + myPhoneNumber + '/' + friendNumber + '/' + file.basename;
+ 
 
     // send data to firbase database.
     // 보내고 나서는 DB에 저장해야 한다.  보낸사람 , 받는사람 (전화번호), 파일명, 승인상태
     // 승인 상태 : wait, approval, reject
-    await createData(myPhoneNumber, myName, friendNumber, freindName, savedPath, file.basename, ApprovalCondition.ready);
+    await createData(myPhoneNumber, myName, friendNumber, freindName, '', '', ApprovalCondition.ready);
 
-    StorageReference firebaseStorageRef =
-        FirebaseStorage.instance.ref().child(savedPath);
-    StorageUploadTask uploadTask = firebaseStorageRef.putFile(
-      file,
-      StorageMetadata(
-        contentType: 'audio/m4a',
-        customMetadata: <String, String>{'file': 'audio'},
-      ),
-    );
-    //StorageTaskSnapshot taskSnapshot = await uploadTask.onComplete;
     setState(() {
       print("uploaded.");
     });
@@ -375,8 +244,7 @@ class _WritePageState extends State<WritePage2> {
       'receiverName': _friendName,
       'savedPath': _savedPath,
       'status': _approvalCondition,
-
-      'content': '',
+      'contents': _textController.text,
     });
     database
         .child('Receiver')
@@ -390,7 +258,7 @@ class _WritePageState extends State<WritePage2> {
       'savedPath': _savedPath,
       'status': _approvalCondition,
 
-      'content': '',
+      'contents': _textController.text,
     });
   }
 
@@ -411,6 +279,7 @@ class _WritePageState extends State<WritePage2> {
 
     // 앱상에 알람으로 알리기!
     await _sendSMS(appName, contactUserInfo.phoneNumber, myName);
+    _handleSubmitted(_textController.text);
   } 
 
   _navigateAndDisplaySelection(BuildContext context) async {
@@ -481,8 +350,4 @@ class _WritePageState extends State<WritePage2> {
     );
   }
 
-  // change play status after play audio.
-  void _onComplete() {
-      setState(() => _isPlaying = false);
-    }
 }

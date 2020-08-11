@@ -352,7 +352,7 @@ class _SearchPageState extends State<SearchPage>
     try {
       String modifyKey;
       for (DBData db in friendSentData) {
-        if (db.savedPath == dbData.savedPath) {
+        if (db.date == dbData.date && db.senderPhoneNumber == dbData.senderPhoneNumber) {
           modifyKey = db.key;
         }
       }
@@ -378,13 +378,13 @@ class _SearchPageState extends State<SearchPage>
 
   deleteDBData(int index) async {
     String removeKey = sentData[index].key;
-    String savedPath = sentData[index].savedPath;
+    String date = sentData[index].date;
     String friendPhoneNumber = sentData[index].receiverPhoneNumber;
 
     // 친구 DB 정보 가져와서
     await getFriendDBData(friendPhoneNumber);
     // 친구 DB 지우고,
-    deleteFriendReceivedDBData(savedPath, friendPhoneNumber);
+    deleteFriendReceivedDBData(date, friendPhoneNumber);
 
     // 내 보낸 DB 지우고,
     DatabaseReference ref = FirebaseDatabase.instance.reference();
@@ -403,10 +403,10 @@ class _SearchPageState extends State<SearchPage>
   }
 
   // 친구 받은 dB 삭제는 savedpath 로 찾자.
-  deleteFriendReceivedDBData(String savedPath, String freindPhoneNumber) async {
+  deleteFriendReceivedDBData(String date, String freindPhoneNumber) async {
     String removeKey;
     for (DBData db in friendReceivedData) {
-      if (db.savedPath == savedPath) {
+      if (db.date == date) {
         removeKey = db.key;
       }
     }
@@ -444,11 +444,11 @@ class _SearchPageState extends State<SearchPage>
             controller: ctr,
             tabs: <Tab>[
               new Tab(
-                icon: Icon(Icons.receipt),
+                icon: Icon(Icons.cloud_download),
                 text: '받은파일',
               ),
               new Tab(
-                icon: Icon(Icons.send),
+                icon: Icon(Icons.cloud_upload),
                 text: '보낸파일',
               ),
             ],
@@ -644,11 +644,11 @@ class _SearchPageState extends State<SearchPage>
   Future _deleteFile(DBData dbData, int index) async {
     // 폴더 파일 지우고,
 
-    StorageReference firebaseStorageRef =
-        FirebaseStorage.instance.ref().child(dbData.savedPath);
-    firebaseStorageRef.delete();
+    // StorageReference firebaseStorageRef =
+    //     FirebaseStorage.instance.ref().child(dbData.savedPath);
+    // firebaseStorageRef.delete();
 
-    StorageReference parent = firebaseStorageRef.getParent();
+    // StorageReference parent = firebaseStorageRef.getParent();
     //todo: 나중에 폴더 삭제하는 기능까지 넣어야한다....
 
     // DB 삭제하고 List 초기화
@@ -688,15 +688,35 @@ class _SearchPageState extends State<SearchPage>
     } catch (Exception) {}
   }
 
-  _createAlertDialog(BuildContext context, DBData dbData) async {
-    if (dbData.status == ApprovalCondition.ready) {
-      await showAlert(context, dbData);
-    } else {
+  // select : 0 이면 send, 1이면 receive
+  _createAlertDialog(BuildContext context, DBData dbData, int select) async {
+    if(select == 0){ 
       showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+          content: new Text(dbData.contents, style: new TextStyle(fontSize: 15.0),),
+            actions: <Widget>[
+              new FlatButton(
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                },
+                child: Text('ok'),
+              )
+            ],
+          );
+        }
+      );
+    }
+    else{
+      if (dbData.status == ApprovalCondition.ready) {
+        await showAlert(context, dbData);
+      } else {
+        showDialog(
           context: context,
           builder: (context) {
             return AlertDialog(
-              content: new Text('이미 결정한 파일입니다. 상대방에게 삭제 요청을 하세요.'),
+            content: new Text(dbData.contents, style: new TextStyle(fontSize: 15.0),),
               actions: <Widget>[
                 new FlatButton(
                   onPressed: () {
@@ -706,9 +726,13 @@ class _SearchPageState extends State<SearchPage>
                 )
               ],
             );
-          });
+          }
+        );
+      }
     }
+    
   }
+
 
   Future<void> showAlert(BuildContext context, DBData dbData) async {
     showDialog(
@@ -716,8 +740,8 @@ class _SearchPageState extends State<SearchPage>
         builder: (context) {
           return AlertDialog(
             content: new Text(
-              '음성 파일을 듣고 동의 여부를 선택하세요.',
-              style: new TextStyle(fontSize: 20.0),
+              dbData.contents,
+              style: new TextStyle(fontSize: 15.0),
             ),
             actions: <Widget>[
               new FlatButton(
@@ -756,79 +780,84 @@ class _SearchPageState extends State<SearchPage>
       backColor = Colors.red;
     }
 
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15.0),
-      ),
-      elevation: 20,
-      child: Padding(
-        padding: EdgeInsets.all(10),
-        child: Row(
-          children: <Widget>[
-            Expanded(
-              flex: 1,
-              child: new CircleAvatar(
-                backgroundColor: backColor,
-                child: Text(dbData.status),
-                foregroundColor: Colors.white,
-                minRadius: 40,
+    return GestureDetector(
+      onTap: () async {
+        _createAlertDialog(context, dbData, 0);
+      },
+      child: Card(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0),
+        ),
+        elevation: 20,
+        child: Padding(
+          padding: EdgeInsets.all(10),
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                flex: 1,
+                child: new CircleAvatar(
+                  backgroundColor: backColor,
+                  child: Text(dbData.status),
+                  foregroundColor: Colors.white,
+                  minRadius: 40,
+                ),
               ),
-            ),
-            Expanded(
-              flex: 3,
-              child: new Container(
-                child: Padding(
-                  padding: EdgeInsets.only(left: 20),
-                  child: new Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      new Text(
-                        dbData.receiverName,
-                        style: TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.bold),
-                      ),
-                      new Text(
-                        dbData.receiverPhoneNumber + '\n',
-                      ),
-                      
+              Expanded(
+                flex: 3,
+                child: new Container(
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 20),
+                    child: new Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        new Text(
+                          dbData.receiverName,
+                          style: TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.bold),
+                        ),
+                        new Text(
+                          dbData.receiverPhoneNumber + '\n',
+                        ),
+                        
 
-                      //new Text('생성일 : '),
-                      new Text(
-                        dbData.date.toString(),
-                        style: TextStyle(color: Colors.grey),
-                      )
-                    ],
+                        //new Text('생성일 : '),
+                        new Text(
+                          dbData.date.toString(),
+                          style: TextStyle(color: Colors.grey),
+                        )
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            Expanded(
-              flex: 1,
-              child: new Container(
-                child: sentData.isNotEmpty
-                    ? IconButton(
-                        icon: sentDataSelectPlayIcon(index),
-                        onPressed: () {
-                          selectedIndex = index;
-                          displayProgressBar(context, dbData);
-                        },
-                      )
-                    : null,
-              ),
-            ),
-            Expanded(
-              flex: 1,
-              child: new Container(
-                child: IconButton(
-                  icon: Icon(Icons.delete),
-                  onPressed: () {
-                    selectedIndex = index;
-                    _deleteFile(dbData, index);
-                  },
+              // Expanded(
+              //   flex: 1,
+              //   child: new Container(
+              //     child: sentData.isNotEmpty
+              //         ? IconButton(
+              //             icon: sentDataSelectPlayIcon(index),
+              //             onPressed: () {
+              //               selectedIndex = index;
+              //               displayProgressBar(context, dbData);
+              //             },
+              //           )
+              //         : null,
+              //   ),
+              // ),
+              Expanded(
+                flex: 1,
+                child: new Container(
+                  child: IconButton(
+                    icon: Icon(Icons.delete),
+                    onPressed: () {
+                      selectedIndex = index;
+                      _deleteFile(dbData, index);
+                    },
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -850,7 +879,7 @@ class _SearchPageState extends State<SearchPage>
     return GestureDetector(
       onTap: () async {
         await getFriendDBData(dbData.senderPhoneNumber);
-        _createAlertDialog(context, dbData);
+        _createAlertDialog(context, dbData, 1);
       },
       child: Card(
         shape: RoundedRectangleBorder(

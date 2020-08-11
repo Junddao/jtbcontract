@@ -39,6 +39,10 @@ class _LoginPageState extends State<LoginPage> {
         (await _auth.signInWithCredential(credential)).user;
 
     mobileNumber = await MobileNumber.mobileNumber;
+    if(mobileNumber.substring(0, 1) == '+') mobileNumber = mobileNumber.substring(1);
+    if(mobileNumber.substring(0, 2) == '82') mobileNumber = mobileNumber.substring(2);
+    if(mobileNumber.substring(0, 1) == '1') mobileNumber = '0' + mobileNumber;
+
     UserInfoDetails details = new UserInfoDetails(
       userDetails.providerId,
       userDetails.displayName,

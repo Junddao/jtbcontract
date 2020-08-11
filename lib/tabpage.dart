@@ -3,7 +3,6 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:jtbcontract/accountpage.dart';
 import 'package:jtbcontract/friendpage.dart';
 import 'package:jtbcontract/searchPage.dart';
-import 'package:jtbcontract/writepage.dart';
 import 'package:jtbcontract/writepage2.dart';
 import 'package:provider/provider.dart';
 import 'data/tabstates.dart';
@@ -39,7 +38,7 @@ class _TabPageState extends State<TabPage> {
               // title:  Text(snapshot.data.userName),
               title: getTitleText(),
 
-              backgroundColor: Colors.black,
+              backgroundColor: Colors.white10,
               bottomOpacity: 0.0,
               elevation: 0.0,
               automaticallyImplyLeading: false,
@@ -64,7 +63,7 @@ class _TabPageState extends State<TabPage> {
                     // sets the background color of the `BottomNavigationBar`
                     canvasColor: Colors.white,
                     // sets the active color of the `BottomNavigationBar` if `Brightness` is light
-                    primaryColor: Colors.black,
+                    primaryColor: Colors.red,
                     textTheme: Theme.of(context).textTheme.copyWith(
                         caption: new TextStyle(
                             color: Colors
@@ -79,8 +78,8 @@ class _TabPageState extends State<TabPage> {
                       //     icon: Icon(Icons.mic),
                       //     title: Text('녹음')), // 뭘 보여줘야 할까...
                       BottomNavigationBarItem(
-                          icon: Icon(Icons.mic),
-                          title: Text('작성')), // 
+                          icon: Icon(Icons.create),
+                          title: Text('쓰기')), // 
                       BottomNavigationBarItem(
                           icon: Icon(Icons.search),
                           title: Text('찾기')), // 계약서 작성 페이지
@@ -90,7 +89,6 @@ class _TabPageState extends State<TabPage> {
                       BottomNavigationBarItem(
                           icon: Icon(Icons.supervised_user_circle),
                           title: Text('내계정')), // 내 계정 확인, 작성 문서찾기
-                     
                     ]))));
   }
 
@@ -98,14 +96,14 @@ class _TabPageState extends State<TabPage> {
     String titleText;
     
     // if(Provider.of<TabStates>(context).selectedIndex == 0) titleText = '녹음';
-    if(Provider.of<TabStates>(context).selectedIndex == 0) titleText = '작성';
+    if(Provider.of<TabStates>(context).selectedIndex == 0) titleText = '쓰기';
     if(Provider.of<TabStates>(context).selectedIndex == 1) titleText = '찾기';
     if(Provider.of<TabStates>(context).selectedIndex == 2) titleText = '친구';
     if(Provider.of<TabStates>(context).selectedIndex == 3) titleText = '내계정';
     
     return Text(
       titleText,
-      style: TextStyle(color: Colors.white),
+      style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
     );
   }
 
