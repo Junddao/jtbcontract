@@ -86,7 +86,6 @@ class _SearchPageState extends State<SearchPage>
     getStatusStream(itemSenderRef, _updatedStatus)
         .then((StreamSubscription s) => _subscriptionStatus = s);
 
-
     super.initState();
   }
 
@@ -145,26 +144,26 @@ class _SearchPageState extends State<SearchPage>
     super.dispose();
   }
 
-
-  Future removeRejectedSentData() async{
+  Future removeRejectedSentData() async {
     DateTime now = DateTime.now();
     // String formattedDate  = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
 
     int index = 0;
 
-    for(DBData d in sentData){
-      if(d.status == ApprovalCondition.reject){
+    for (DBData d in sentData) {
+      if (d.status == ApprovalCondition.reject) {
         DateTime sentDate = DateTime.parse(d.date);
-        int diffDays = now.difference(sentDate).inDays; 
-        if(diffDays > 3){   // 작성한지 3일지나고 거절된 메시지는 바로 삭제한다.
+        int diffDays = now.difference(sentDate).inDays;
+        if (diffDays > 3) {
+          // 거절 당하고 3일이 지나면 삭제한다.
           // DB 삭제
           await deleteDBData(index);
         }
-      }
-      else{
+      } else {
         DateTime sentDate = DateTime.parse(d.date);
-        int diffDays = now.difference(sentDate).inDays; 
-        if(diffDays > 30){   // 작성한지 30일지난 메시지는 삭제한다.
+        int diffDays = now.difference(sentDate).inDays;
+        if (diffDays > 30) {
+          // 작성한지 30일지난 메시지는 삭제한다.
           // DB 삭제
           await deleteDBData(index);
         }
@@ -175,7 +174,7 @@ class _SearchPageState extends State<SearchPage>
 
   Future<List<DBData>> getMySentDBData() async {
     DatabaseReference ref = FirebaseDatabase.instance.reference();
-    try{
+    try {
       sentData.clear();
       await ref
           .child('Sender')
@@ -200,55 +199,49 @@ class _SearchPageState extends State<SearchPage>
           }
         }
       });
-      sentData.sort((a,b) => a.date.compareTo(b.date));
-    }
-    catch(Exception) {
+      sentData.sort((a, b) => a.date.compareTo(b.date));
+    } catch (Exception) {
       print('sent db error');
-    }
-    finally{
+    } finally {
       removeRejectedSentData();
     }
-    
     return sentData;
   }
 
   Future<List<DBData>> getMyReceivedDBData() async {
     DatabaseReference ref = FirebaseDatabase.instance.reference();
 
-    try{
+    try {
       receivedData.clear();
-          await ref
-              .child('Receiver')
-              .child(myPhoneNumber)
-              .once()
-              .then((DataSnapshot snap) {
-            var keys = snap.value.keys;
-            var data = snap.value;
-            for (var key in keys) {
-              DBData d = new DBData(
-                  key,
-                  data[key]['date'],
-                  data[key]['senderPhoneNumber'],
-                  data[key]['senderName'],
-                  data[key]['receiverPhoneNumber'],
-                  data[key]['receiverName'],
-                  data[key]['savedPath'],
-                  data[key]['status'],
-                  data[key]['contents']);
-              if (d.receiverPhoneNumber == myPhoneNumber) {
-                receivedData.add(d);
-              }
-            }
-          });
-          receivedData.sort((a,b) => a.date.compareTo(b.date));
-    }
-    catch(Exception) {
+      await ref
+          .child('Receiver')
+          .child(myPhoneNumber)
+          .once()
+          .then((DataSnapshot snap) {
+        var keys = snap.value.keys;
+        var data = snap.value;
+        for (var key in keys) {
+          DBData d = new DBData(
+              key,
+              data[key]['date'],
+              data[key]['senderPhoneNumber'],
+              data[key]['senderName'],
+              data[key]['receiverPhoneNumber'],
+              data[key]['receiverName'],
+              data[key]['savedPath'],
+              data[key]['status'],
+              data[key]['contents']);
+          if (d.receiverPhoneNumber == myPhoneNumber) {
+            receivedData.add(d);
+          }
+        }
+      });
+      receivedData.sort((a, b) => a.date.compareTo(b.date));
+    } catch (Exception) {
       print('received db error');
     }
     return receivedData;
-    
   }
-
 
   Future getFriendDBData(String friendPhoneNumber) async {
     DatabaseReference ref = FirebaseDatabase.instance.reference();
@@ -278,7 +271,7 @@ class _SearchPageState extends State<SearchPage>
           }
         }
       });
-      friendSentData.sort((a,b) => a.date.compareTo(b.date));
+      friendSentData.sort((a, b) => a.date.compareTo(b.date));
     } catch (Exception) {
       print('error');
     }
@@ -310,7 +303,7 @@ class _SearchPageState extends State<SearchPage>
           print('length : ${friendReceivedData.length}');
         });
       });
-      friendReceivedData.sort((a,b) => a.date.compareTo(b.date));
+      friendReceivedData.sort((a, b) => a.date.compareTo(b.date));
     } catch (Exception) {
       print('error');
     }
@@ -352,7 +345,8 @@ class _SearchPageState extends State<SearchPage>
     try {
       String modifyKey;
       for (DBData db in friendSentData) {
-        if (db.date == dbData.date && db.senderPhoneNumber == dbData.senderPhoneNumber) {
+        if (db.date == dbData.date &&
+            db.senderPhoneNumber == dbData.senderPhoneNumber) {
           modifyKey = db.key;
         }
       }
@@ -434,9 +428,11 @@ class _SearchPageState extends State<SearchPage>
     });
 
     return Scaffold(
+      backgroundColor: Colors.white,
       key: _scaffoldKey,
       appBar: new AppBar(
         backgroundColor: Colors.white,
+        elevation: 0,
         flexibleSpace: SafeArea(
           child: new TabBar(
             indicatorColor: Colors.pink,
@@ -690,33 +686,15 @@ class _SearchPageState extends State<SearchPage>
 
   // select : 0 이면 send, 1이면 receive
   _createAlertDialog(BuildContext context, DBData dbData, int select) async {
-    if(select == 0){ 
+    if (select == 0) {
       showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-          content: new Text(dbData.contents, style: new TextStyle(fontSize: 15.0),),
-            actions: <Widget>[
-              new FlatButton(
-                onPressed: () {
-                  Navigator.of(context).pop(true);
-                },
-                child: Text('ok'),
-              )
-            ],
-          );
-        }
-      );
-    }
-    else{
-      if (dbData.status == ApprovalCondition.ready) {
-        await showAlert(context, dbData);
-      } else {
-        showDialog(
           context: context,
           builder: (context) {
             return AlertDialog(
-            content: new Text(dbData.contents, style: new TextStyle(fontSize: 15.0),),
+              content: new Text(
+                dbData.contents,
+                style: new TextStyle(fontSize: 15.0),
+              ),
               actions: <Widget>[
                 new FlatButton(
                   onPressed: () {
@@ -726,13 +704,32 @@ class _SearchPageState extends State<SearchPage>
                 )
               ],
             );
-          }
-        );
+          });
+    } else {
+      if (dbData.status == ApprovalCondition.ready) {
+        await showAlert(context, dbData);
+      } else {
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                content: new Text(
+                  dbData.contents,
+                  style: new TextStyle(fontSize: 15.0),
+                ),
+                actions: <Widget>[
+                  new FlatButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(true);
+                    },
+                    child: Text('ok'),
+                  )
+                ],
+              );
+            });
       }
     }
-    
   }
-
 
   Future<void> showAlert(BuildContext context, DBData dbData) async {
     showDialog(
@@ -818,7 +815,6 @@ class _SearchPageState extends State<SearchPage>
                         new Text(
                           dbData.receiverPhoneNumber + '\n',
                         ),
-                        
 
                         //new Text('생성일 : '),
                         new Text(
@@ -905,20 +901,19 @@ class _SearchPageState extends State<SearchPage>
               Expanded(
                 flex: 3,
                 child: new Container(
-                  child: new Padding(
+                    child: new Padding(
                   padding: EdgeInsets.all(3),
                   child: new Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       new Text(
-                        dbData.senderName ,
+                        dbData.senderName,
                         style: TextStyle(
                             fontSize: 15, fontWeight: FontWeight.bold),
                       ),
                       new Text(
                         dbData.senderPhoneNumber + '\n',
                       ),
-                       
                       new Text(
                         dbData.date.toString(),
                         style: TextStyle(color: Colors.grey),
@@ -929,17 +924,19 @@ class _SearchPageState extends State<SearchPage>
               ),
               Expanded(
                 flex: 1,
-                child: new Container(
-                  child: receivedData.isNotEmpty
-                      ? IconButton(
-                          icon: receivedDataSelectPlayIcon(index),
-                          onPressed: () {
-                            selectedIndex = index;
-                            displayProgressBar(context, dbData);
-                          },
-                        )
-                      : null,
-                ),
+                child: receivedData[index].contents == ''
+                    ? (new Container(
+                        child: receivedData.isNotEmpty
+                            ? IconButton(
+                                icon: receivedDataSelectPlayIcon(index),
+                                onPressed: () {
+                                  selectedIndex = index;
+                                  displayProgressBar(context, dbData);
+                                },
+                              )
+                            : null,
+                      ))
+                    : Container(),
               ),
             ],
           ),

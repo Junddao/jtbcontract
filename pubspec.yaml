@@ -19,7 +19,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  mobile_number: ^0.0.4
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -38,7 +37,6 @@ dependencies:
   firebase_storage: null
   firebase_database: null
   contacts_service: null
-
   http: null
   firebase_messaging: null
   cloud_firestore: null

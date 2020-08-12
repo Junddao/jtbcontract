@@ -89,6 +89,10 @@ class _LoginPageState extends State<LoginPage> {
     if (!mounted) return;
 
     setState(() {
+      mobileNumber.replaceAll('+', '');
+      if (mobileNumber.startsWith('82')) {
+        mobileNumber = mobileNumber.replaceAll('82', '');
+      }
       _mobileNumber = mobileNumber;
     });
   }

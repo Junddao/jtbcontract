@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:jtbcontract/accountpage.dart';
 import 'package:jtbcontract/friendpage.dart';
+import 'package:jtbcontract/mainWritePage.dart';
 import 'package:jtbcontract/searchPage.dart';
 import 'package:jtbcontract/writepage2.dart';
 import 'package:provider/provider.dart';
@@ -15,7 +16,8 @@ class TabPage extends StatefulWidget {
 class _TabPageState extends State<TabPage> {
   final List<Widget> _tabs = [
     //WritePage(),
-    WritePage2(),
+    // WritePage2(),
+    MainWritePage(),
     SearchPage(),
     FreindPage(),
     AccountPage(),
@@ -23,10 +25,8 @@ class _TabPageState extends State<TabPage> {
 
   @override
   void initState() {
-    
     super.initState();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -37,9 +37,7 @@ class _TabPageState extends State<TabPage> {
             appBar: AppBar(
               // title:  Text(snapshot.data.userName),
               title: getTitleText(),
-
-              backgroundColor: Colors.white10,
-              bottomOpacity: 0.0,
+              backgroundColor: Colors.white,
               elevation: 0.0,
               automaticallyImplyLeading: false,
               // actions: <Widget>[
@@ -78,8 +76,7 @@ class _TabPageState extends State<TabPage> {
                       //     icon: Icon(Icons.mic),
                       //     title: Text('녹음')), // 뭘 보여줘야 할까...
                       BottomNavigationBarItem(
-                          icon: Icon(Icons.create),
-                          title: Text('쓰기')), // 
+                          icon: Icon(Icons.create), title: Text('쓰기')), //
                       BottomNavigationBarItem(
                           icon: Icon(Icons.search),
                           title: Text('찾기')), // 계약서 작성 페이지
@@ -92,15 +89,15 @@ class _TabPageState extends State<TabPage> {
                     ]))));
   }
 
-  Text getTitleText(){
+  Text getTitleText() {
     String titleText;
-    
+
     // if(Provider.of<TabStates>(context).selectedIndex == 0) titleText = '녹음';
-    if(Provider.of<TabStates>(context).selectedIndex == 0) titleText = '쓰기';
-    if(Provider.of<TabStates>(context).selectedIndex == 1) titleText = '찾기';
-    if(Provider.of<TabStates>(context).selectedIndex == 2) titleText = '친구';
-    if(Provider.of<TabStates>(context).selectedIndex == 3) titleText = '내계정';
-    
+    if (Provider.of<TabStates>(context).selectedIndex == 0) titleText = '쓰기';
+    if (Provider.of<TabStates>(context).selectedIndex == 1) titleText = '찾기';
+    if (Provider.of<TabStates>(context).selectedIndex == 2) titleText = '친구';
+    if (Provider.of<TabStates>(context).selectedIndex == 3) titleText = '내계정';
+
     return Text(
       titleText,
       style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),

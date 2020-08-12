@@ -1,5 +1,6 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:jtbcontract/data/tabstates.dart';
 import 'package:jtbcontract/data/userinfo.dart';
 import 'package:jtbcontract/rootpage.dart';
@@ -10,6 +11,7 @@ import 'package:splashscreen/splashscreen.dart';
 void main() {
   runApp(new MaterialApp(
     home: MyApp(),
+
     //onGenerateRoute: generateRoute,
     //initialRoute: RootPageRoute,
   ));
@@ -26,6 +28,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void initState() {
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     firebaseMessaging.configure(onLaunch: (Map<String, dynamic> msg) {
       print('onlaunch');
     }, onResume: (Map<String, dynamic> msg) {
@@ -69,17 +72,9 @@ class _MyAppState extends State<MyApp> {
           color: Colors.black,
         ),
       ),
-      //image: new Image.network('https://i.imgur.com/TyCSG9A.png'),
-
       backgroundColor: Colors.white,
-      // styleTextUnderTheLoader: new TextStyle(
-      //   fontSize: 12.0,
-      //   fontWeight: FontWeight.bold,
-      //   color: Colors.white
-      // ),
       photoSize: 100.0,
       loaderColor: Colors.white,
-      //loadingText: Text('Now Loading'),
     );
   }
 }
@@ -103,10 +98,10 @@ class AfterSplash extends StatelessWidget {
   }
 
   void permission() async {
-    //await PermissionHandler().requestPermissions([PermissionGroup.microphone]);
-    //await PermissionHandler().requestPermissions([PermissionGroup.storage]);
+    await PermissionHandler().requestPermissions([PermissionGroup.microphone]);
+    await PermissionHandler().requestPermissions([PermissionGroup.storage]);
     await PermissionHandler().requestPermissions([PermissionGroup.contacts]);
     await PermissionHandler().requestPermissions([PermissionGroup.phone]);
-    //await PermissionHandler().requestPermissions([PermissionGroup.sms]);
+    await PermissionHandler().requestPermissions([PermissionGroup.sms]);
   }
 }
